@@ -42,7 +42,7 @@ wss.on('connection', (ws) => {
             case 'createRoom':
                 ws.playerName = data.name || "Host";
                 // Genera un ID de sala
-                const newRoomId = uuidv4();
+                const newRoomId = generateRoomId();
                 rooms[newRoomId] = {
                     host: ws,
                     clients: []
@@ -200,4 +200,13 @@ function handleWebRTCSignaling(ws, data) {
             room.host.send(JSON.stringify(data));
         }
     }
+}
+
+function generateRoomId() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let result = '';
+    for (let i = 0; i < 5; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
 }
