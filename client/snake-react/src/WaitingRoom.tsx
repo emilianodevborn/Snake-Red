@@ -8,14 +8,12 @@ interface Player {
 
 interface WaitingRoomProps {
     onStartGame: () => void;
-    setRole: (role: "host" | "client") => void;
     isHost: boolean;
     playerName: string;
-    isJoined: boolean;
     socket: WebSocket | null;
 }
 
-const WaitingRoom: React.FC<WaitingRoomProps> = ({ onStartGame, isHost, playerName, isJoined, socket }) => {
+const WaitingRoom: React.FC<WaitingRoomProps> = ({ onStartGame, isHost, playerName, socket }) => {
     const [players, setPlayers] = useState<Player[]>([]);
     const [roomId, setRoomId] = useState<string>("");
 
@@ -33,6 +31,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({ onStartGame, isHost, playerNa
                         setRoomId(data.roomId);
                         return;
                     case "roomCreated":
+                        setPlayers([{ id: data.playerId, name: playerName }]);
                         setRoomId(data.roomId);
                         return;
                     default:
@@ -53,17 +52,6 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({ onStartGame, isHost, playerNa
         if (socket) {
             const startGameMessage = { type: "startGame" };
             socket.send(JSON.stringify(startGameMessage));
-        }
-    };
-
-    const joinRoom = () => {
-        if (socket && playerName.trim() !== "" && roomId.trim() !== "") {
-            const joinMessage = {
-                type: "joinRoom",
-                roomId,
-                name: playerName,
-            };
-            socket.send(JSON.stringify(joinMessage));
         }
     };
 
@@ -106,10 +94,8 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({ onStartGame, isHost, playerNa
             {players.map((player) => (
                 <div key={player.id}>{player.name}</div>
             ))}
-            {isHost ? (
+            {isHost && (
                 <GameButtons onClick={startGame} text="Iniciar Juego" />
-            ) : (
-                <GameButtons onClick={joinRoom} text="Unirse a Sala" />
             )}
         </div>
     )
