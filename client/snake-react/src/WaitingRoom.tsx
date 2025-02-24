@@ -1,132 +1,118 @@
 import React, { useState, useEffect } from "react";
 
+import GameButtons from "./components/GameButtons";
 interface Player {
   id: string;
   name: string;
 }
 
 interface WaitingRoomProps {
-  onStartGame: () => void;
-  setRole: (role: "host" | "client") => void;
-  isHost: boolean;
-  socket: WebSocket;
+    onStartGame: () => void;
+    setRole: (role: "host" | "client") => void;
+    isHost: boolean;
+    playerName: string;
+    isJoined: boolean;
+    socket: WebSocket | null;
 }
 
-const WaitingRoom: React.FC<WaitingRoomProps> = ({
-  onStartGame,
-  isHost,
-  socket,
-}) => {
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [roomId, setRoomId] = useState<string>("");
-  const [inputRoomId, setInputRoomId] = useState<string>("");
-  const [playerName, setPlayerName] = useState<string>("");
-  const [isJoined, setIsJoined] = useState<boolean>(false);
+const WaitingRoom: React.FC<WaitingRoomProps> = ({ onStartGame, isHost, playerName, isJoined, socket }) => {
+    const [players, setPlayers] = useState<Player[]>([]);
+    const [roomId, setRoomId] = useState<string>("");
 
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data);
+    useEffect(() => {
+        if (!socket) return;
+        const handleMessage = (event: MessageEvent) => {
+            try {
+                const data = JSON.parse(event.data);
+                switch (data.type) {
+                    case "startGame":
+                        onStartGame();
+                        return;
+                    case "playerList":
+                        setPlayers(data.players);
+                        setRoomId(data.roomId);
+                        return;
+                    case "roomCreated":
+                        setRoomId(data.roomId);
+                        return;
+                    default:
+                        return;
+                }
+            } catch (err) {
+                console.error("Error parseando mensaje:", err);
+            }
+        };
 
-        if (data.type === "roomCreated" && isHost) {
-          setRoomId(data.roomId);
-          setPlayers([{ id: data.playerId, name: data.name }]);
-        } else if (data.type === "playerList") {
-          setPlayers(data.players);
-        } else if (data.type === "startGame") {
-          onStartGame();
+        socket.addEventListener("message", handleMessage);
+        return () => {
+            socket.removeEventListener("message", handleMessage);
+        };
+    }, [socket, onStartGame, isHost]);
+
+    const startGame = () => {
+        if (socket) {
+            const startGameMessage = { type: "startGame" };
+            socket.send(JSON.stringify(startGameMessage));
         }
-      } catch (err) {
-        console.error("Error parseando mensaje:", err);
-      }
     };
 
-    socket.addEventListener("message", handleMessage);
-    return () => {
-      socket.removeEventListener("message", handleMessage);
+    const joinRoom = () => {
+        if (socket && playerName.trim() !== "" && roomId.trim() !== "") {
+            const joinMessage = {
+                type: "joinRoom",
+                roomId,
+                name: playerName,
+            };
+            socket.send(JSON.stringify(joinMessage));
+        }
     };
-  }, [socket, onStartGame, isHost]);
 
-  const createRoom = () => {
-    if (socket && playerName.trim() !== "") {
-      const createMessage = {
-        type: "createRoom",
-        name: playerName,
-      };
-      socket.send(JSON.stringify(createMessage));
-      setIsJoined(true);
-    }
-  };
-
-  const joinRoom = () => {
-    if (socket && playerName.trim() !== "" && inputRoomId.trim() !== "") {
-      const joinMessage = {
-        type: "joinRoom",
-        roomId: inputRoomId,
-        name: playerName,
-      };
-      socket.send(JSON.stringify(joinMessage));
-      setIsJoined(true);
-    }
-  };
-
-  const startGame = () => {
-    if (socket) {
-      const startGameMessage = { type: "startGame" };
-      socket.send(JSON.stringify(startGameMessage));
-      console.log("Mensaje startGame enviado al servidor");
-    }
-  };
-
-  return (
-    <div>
-      <h2>Sala de Espera</h2>
-      {!isJoined ? (
-        <div>
-          <label>
-            Ingresa tu nombre:
-            <input
-              type="text"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-            />
-          </label>
-          {isHost ? (
-            <button onClick={createRoom}>Crear Sala</button>
-          ) : (
-            <>
-              <label>
-                Ingresa el código de sala:
-                <input
-                  type="text"
-                  value={inputRoomId}
-                  onChange={(e) => setInputRoomId(e.target.value)}
-                />
-              </label>
-              <button onClick={joinRoom}>Unirse a Sala</button>
-            </>
-          )}
-        </div>
-      ) : (
-        <div>
-          <p>
-            Bienvenido, {playerName}. {isHost ? `Sala ID: ${roomId}` : ""}
-          </p>
-          <h3>Jugadores conectados:</h3>
-          <ul>
+    return (
+        <div style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            display: 'flex',
+            width: '100%',
+            height: '100%',
+            flexDirection: 'column',
+            gap: '15px'
+        }}>
+            <div style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: 'red',
+                textTransform: 'uppercase',
+            }}>Waiting for start...</div>
+            {roomId && (
+                <div style={{
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    color: '#000',
+                    flexDirection: 'row',
+                    display: 'flex',
+                }}>Room ID:<div style={{ color: 'green' }}>{roomId}</div></div>
+            )}
+            <div style={{
+                fontSize: '14px',
+                fontWeight: 'bold',
+                color: 'red',
+                flexDirection: 'row',
+                display: 'flex',
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                width: '100%',
+                justifyContent: 'center',
+                padding: '10px',
+            }}>Players:</div>
             {players.map((player) => (
-              <li key={player.id}>{player.name}</li>
+                <div key={player.id}>{player.name}</div>
             ))}
-          </ul>
-          {isHost && (
-            <div>
-              <button onClick={startGame}>Iniciar Juego</button>
-            </div>
-          )}
+            {isHost ? (
+                <GameButtons onClick={startGame} text="Iniciar Juego" />
+            ) : (
+                <GameButtons onClick={joinRoom} text="Unirse a Sala" />
+            )}
         </div>
-      )}
-    </div>
-  );
+    )
 };
 
 export default WaitingRoom;
