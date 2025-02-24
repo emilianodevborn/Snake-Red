@@ -6,6 +6,7 @@ import LoadingView from "./LoadingView";
 import GameView from "./components/GameView";
 import Modal from "./components/Modal";
 import useCreateRoom from "./hooks/useCreateRoom";
+import useJoinRoom from "./hooks/useJoinRoom";
 
 export enum GamePhase {
   START = "start",
@@ -21,6 +22,7 @@ const App: React.FC = () => {
     const [name, setName] = useState<string>("");
     const { isJoined, createRoom } = useCreateRoom(socket, name);
     const [clientId, setClientId] = useState('');
+    const { joinRoom } = useJoinRoom(socket, name, clientId);
 
     useEffect(() => {
         const ws = new WebSocket("https://4712-190-210-239-237.ngrok-free.app");
@@ -37,12 +39,13 @@ const App: React.FC = () => {
                     setClientId={setClientId}
                     clientId={clientId}
                     name={name}
-                onSelectHost={() => {
-                    createRoom()
-                    setRole("host");
-                    setPhase(GamePhase.LOBBY);
-                }}
+                    onSelectHost={() => {
+                        createRoom()
+                        setRole("host");
+                        setPhase(GamePhase.LOBBY);
+                    }}
                     onSelectClient={() => {
+                        joinRoom();
                         setRole("client");
                         setPhase(GamePhase.LOBBY);
                     }}
@@ -56,10 +59,8 @@ const App: React.FC = () => {
                 {role && socket && (
                     <WaitingRoom
                         onStartGame={() => setPhase(GamePhase.LOADING)}
-                        setRole={setRole}
                         isHost={role === "host"}
                         playerName={name}
-                        isJoined={isJoined}
                         socket={socket}
                     />
                 )}

@@ -3,9 +3,10 @@ type GameButtonsProps = {
     text: string;
     color?: string;
     disabled?: boolean;
+    width?: string;
 }
 
-const GameButtons = ({ onClick, text, color = 'black', disabled = false }: GameButtonsProps) => {
+const GameButtons = ({ onClick, text, color = 'black', disabled = false, width = '100%' }: GameButtonsProps) => {
     return (
       <button
         style={{
@@ -14,7 +15,7 @@ const GameButtons = ({ onClick, text, color = 'black', disabled = false }: GameB
           padding: '5px 10px',
           borderRadius: '5px',
           cursor: disabled ? 'not-allowed' : 'pointer',
-          width: '20%',
+          width,
         }}
         onClick={onClick}
         disabled={disabled}
