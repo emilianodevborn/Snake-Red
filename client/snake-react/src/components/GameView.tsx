@@ -16,6 +16,8 @@ const initialGameState: GameState = {
         { id: "client1", segments: [{ x: 10, y: 5 }], direction: { x: 1, y: 0 }, color: "blue" },
     ],
     food: [generateFood(), generateFood(), generateFood()],
+    obstacles: [],
+    consumedFood: 0,
     gameOver: false,
 };
 
@@ -164,9 +166,15 @@ const GameView: React.FC<GameViewProps> = ({ role, socket }) => {
                 ctx.fillRect(segment.x * GRID_SIZE, segment.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
             });
         });
+        // Show food
         ctx.fillStyle = "red";
         gameState.food.forEach((food) => {
             ctx.fillRect(food.x * GRID_SIZE, food.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+        });
+        // Show obstacles
+        ctx.fillStyle = "gray"; // Color para los obstáculos
+        gameState.obstacles.forEach((obstacle) => {
+            ctx.fillRect(obstacle.x * GRID_SIZE, obstacle.y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
         });
         if (gameState.gameOver) {
             ctx.fillStyle = "black";

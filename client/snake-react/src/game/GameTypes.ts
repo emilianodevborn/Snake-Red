@@ -11,6 +11,8 @@ export interface Snake {
 export interface GameState {
     snakes: Snake[];
     food: Coordinate[];
+    obstacles: Coordinate[];
+    consumedFood: number;
     gameOver: boolean;
 }
 

@@ -1,6 +1,7 @@
 // src/game/GameLogic.ts
 import { GameState, CANVAS_WIDTH, CANVAS_HEIGHT, GRID_SIZE, Coordinate, Snake } from "./GameTypes";
 import { generateFood } from "./generateFood";
+import {generateObstacle} from "./generateObstacle";
 
 export const updateGameState = (prevState: GameState): GameState => {
     if (prevState.gameOver) return prevState;
@@ -52,6 +53,9 @@ export const updateGameState = (prevState: GameState): GameState => {
 
     // Paso 4: actualizar serpientes y dropear 50% de los segmentos ganados
     let newFoodArray = prevState.food.slice();
+    let newObstacles = [...prevState.obstacles];
+    let newConsumedFood = prevState.consumedFood;
+
     const updatedSnakes: Snake[] = snakesWithNewHead.map((snake) => {
         if (deadSnakeIds.has(snake.id)) {
             const consumed = snake.segments.length - 1;
@@ -65,6 +69,13 @@ export const updateGameState = (prevState: GameState): GameState => {
                 ateFood = true;
                 newFoodArray = newFoodArray.filter(f => !(f.x === snake.newHead.x && f.y === snake.newHead.y));
                 newFoodArray.push(generateFood());
+                newConsumedFood += 1;
+            }
+            // Cada 2 comidas consumidas, generamos un obstáculo
+            if (ateFood && newConsumedFood % 2 === 0) {
+                const obstacle = generateObstacle();
+                newObstacles.push(obstacle);
+                console.log("Generado obstáculo en:", obstacle);
             }
             const newSegments = ateFood
                 ? [snake.newHead, ...snake.segments]
@@ -82,6 +93,8 @@ export const updateGameState = (prevState: GameState): GameState => {
     return {
         snakes: updatedSnakes,
         food: newFoodArray,
+        obstacles: newObstacles,
+        consumedFood: newConsumedFood,
         gameOver,
     };
 };
