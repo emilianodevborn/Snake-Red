@@ -22,6 +22,7 @@ wss.on('connection', (ws) => {
     // Propiedad opcional para almacenar el ID de sala y rol
     ws.roomId = null;
     ws.isHost = false;
+    ws.playerName = "";
 
     ws.on('message', (message) => {
         console.log('Mensaje recibido en el servidor:', message);
@@ -37,6 +38,8 @@ wss.on('connection', (ws) => {
 
             // Caso: crear una nueva sala (host)
             case 'createRoom':
+                // Guardamos el nombre del host
+                ws.playerName = data.name || "Host";
                 // Genera un ID de sala
                 const newRoomId = uuidv4();
                 rooms[newRoomId] = {
@@ -45,12 +48,13 @@ wss.on('connection', (ws) => {
                 };
                 ws.roomId = newRoomId;
                 ws.isHost = true;
-                console.log(`Sala creada con ID: ${newRoomId}`);
+                console.log(`Sala creada con ID: ${newRoomId} por ${ws.playerName}`);
 
                 // Envía al host la confirmación
                 ws.send(JSON.stringify({
                     type: 'roomCreated',
-                    roomId: newRoomId
+                    roomId: newRoomId,
+                    name: ws.playerName
                 }));
                 break;
 
@@ -68,8 +72,9 @@ wss.on('connection', (ws) => {
                 // Asigna al cliente
                 ws.roomId = roomId;
                 ws.isHost = false;
+                ws.playerName = data.name || "Cliente";
                 rooms[roomId].clients.push(ws);
-                console.log(`Cliente se unió a la sala: ${roomId}`);
+                console.log(`Cliente ${ws.playerName} se unió a la sala: ${roomId}`);
 
                 // Enviamos lista de jugadores al host
                 broadcastPlayerList(roomId);
@@ -104,7 +109,7 @@ wss.on('connection', (ws) => {
                     const room = rooms[ws.roomId];
                     if (room.host && room.host.readyState === WebSocket.OPEN) {
                         room.host.send(message);
-                        console.log("Reenviando input del cliente al host");
+                        console.log(`Reenviando input de ${ws.playerName} al host`);
                     }
                 }
                 break;
@@ -119,7 +124,7 @@ wss.on('connection', (ws) => {
         if (ws.roomId && rooms[ws.roomId]) {
             if (ws.isHost) {
                 // Si era el host, cerramos la sala y notificamos a los clientes
-                console.log(`Host se desconectó, cerrando sala: ${ws.roomId}`);
+                console.log(`Host ${ws.playerName} se desconectó, cerrando sala: ${ws.roomId}`);
                 rooms[ws.roomId].clients.forEach(client => {
                     if (client.readyState === WebSocket.OPEN) {
                         client.send(JSON.stringify({
@@ -154,10 +159,10 @@ function broadcastPlayerList(roomId) {
     // Obtenemos una lista de IDs o nombres
     const players = [];
     if (hostSocket) {
-        players.push({ id: 'host', name: 'Host' });
+        players.push({ id: 'host', name: hostSocket.playerName || "Host" });
     }
     clientSockets.forEach((client, index) => {
-        players.push({ id: `client-${index}`, name: `Cliente ${index}` });
+        players.push({ id: `client-${index}`, name: client.playerName || `Cliente ${index}` });
     });
 
     // Mensaje
