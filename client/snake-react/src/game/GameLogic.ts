@@ -2,6 +2,7 @@
 import { GameState, CANVAS_WIDTH, CANVAS_HEIGHT, GRID_SIZE, Coordinate, Snake } from "./GameTypes";
 import { generateFood } from "./generateFood";
 import {generateObstacle} from "./generateObstacle";
+import eatSoundFile from '../assets/eat-sound.mp3';
 
 export const updateGameState = (prevState: GameState): GameState => {
     if (prevState.gameOver) return prevState;
@@ -55,6 +56,7 @@ export const updateGameState = (prevState: GameState): GameState => {
     let newFoodArray = prevState.food.slice();
     let newObstacles = [...prevState.obstacles];
     let newConsumedFood = prevState.consumedFood;
+    const eatSound = new Audio(eatSoundFile);
 
     const updatedSnakes: Snake[] = snakesWithNewHead.map((snake) => {
         if (deadSnakeIds.has(snake.id)) {
@@ -67,6 +69,7 @@ export const updateGameState = (prevState: GameState): GameState => {
             let ateFood = false;
             if (newFoodArray.some(f => f.x === snake.newHead.x && f.y === snake.newHead.y)) {
                 ateFood = true;
+                eatSound.play();
                 newFoodArray = newFoodArray.filter(f => !(f.x === snake.newHead.x && f.y === snake.newHead.y));
                 newFoodArray.push(generateFood());
                 newConsumedFood += 1;
