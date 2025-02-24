@@ -186,12 +186,12 @@ const GameView: React.FC<GameViewProps> = ({ role, socket }) => {
     return (
         <div>
             <h2>Game View - Rol: {role}</h2>
-            <canvas
-                ref={canvasRef}
-                width={CANVAS_WIDTH}
-                height={CANVAS_HEIGHT}
-                style={{ border: "1px solid black" }}
-            />
+                <canvas
+                    ref={canvasRef}
+                    width={CANVAS_WIDTH}
+                    height={CANVAS_HEIGHT}
+                    style={{ border: "1px solid black" }}
+                />
             {gameState.gameOver && <p>¡Fin del juego!</p>}
         </div>
     );
