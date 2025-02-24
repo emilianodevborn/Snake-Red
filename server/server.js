@@ -17,9 +17,11 @@ const wss = new WebSocket.Server({ port: 8080 }, () => {
 });
 
 wss.on('connection', (ws) => {
-    console.log('Nuevo cliente conectado');
+    // Asigna un ID único a cada conexión
+    ws.playerId = uuidv4();
+    console.log(`Nuevo cliente conectado con ID: ${ws.playerId}`);
 
-    // Propiedad opcional para almacenar el ID de sala y rol
+    // Propiedades para sala, rol y nombre del jugador
     ws.roomId = null;
     ws.isHost = false;
     ws.playerName = "";
@@ -38,7 +40,6 @@ wss.on('connection', (ws) => {
 
             // Caso: crear una nueva sala (host)
             case 'createRoom':
-                // Guardamos el nombre del host
                 ws.playerName = data.name || "Host";
                 // Genera un ID de sala
                 const newRoomId = uuidv4();
@@ -48,13 +49,14 @@ wss.on('connection', (ws) => {
                 };
                 ws.roomId = newRoomId;
                 ws.isHost = true;
-                console.log(`Sala creada con ID: ${newRoomId} por ${ws.playerName}`);
+                console.log(`Sala creada con ID: ${newRoomId} por ${ws.playerName} (ID: ${ws.playerId})`);
 
-                // Envía al host la confirmación
+                // Envía al host la confirmación con su playerId
                 ws.send(JSON.stringify({
                     type: 'roomCreated',
                     roomId: newRoomId,
-                    name: ws.playerName
+                    name: ws.playerName,
+                    playerId: ws.playerId
                 }));
                 break;
 
@@ -62,57 +64,53 @@ wss.on('connection', (ws) => {
             case 'joinRoom':
                 const { roomId } = data;
                 if (!rooms[roomId]) {
-                    // Sala no existe
                     ws.send(JSON.stringify({
                         type: 'error',
                         message: 'Sala no existe'
                     }));
                     return;
                 }
-                // Asigna al cliente
                 ws.roomId = roomId;
                 ws.isHost = false;
                 ws.playerName = data.name || "Cliente";
                 rooms[roomId].clients.push(ws);
-                console.log(`Cliente ${ws.playerName} se unió a la sala: ${roomId}`);
+                console.log(`Cliente ${ws.playerName} (ID: ${ws.playerId}) se unió a la sala: ${roomId}`);
 
-                // Enviamos lista de jugadores al host
+                // Enviamos lista de jugadores actualizada a la sala
                 broadcastPlayerList(roomId);
                 break;
 
             // Caso: startGame (host)
             case 'startGame':
                 if (ws.isHost && ws.roomId && rooms[ws.roomId]) {
-                    console.log(`Host inicia juego en sala: ${ws.roomId}`);
-                    // Notifica a todos en la sala que empieza el juego
-                    broadcastInRoom(ws.roomId, {
-                        type: 'startGame'
-                    });
+                    console.log(`Host ${ws.playerName} (ID: ${ws.playerId}) inicia juego en sala: ${ws.roomId}`);
+                    broadcastInRoom(ws.roomId, { type: 'startGame' });
                 }
                 break;
 
-            // Caso: Mensajes de señalización WebRTC
+            // Mensajes de señalización WebRTC
             case 'offer':
             case 'answer':
             case 'candidate':
                 handleWebRTCSignaling(ws, data);
                 break;
+
             case 'gameState':
-                // Reenvía el estado a todos los clientes de la sala
                 if (ws.roomId && rooms[ws.roomId]) {
                     broadcastInRoom(ws.roomId, data);
                 }
                 break;
+
             case 'input':
-                // Si el mensaje viene de un cliente, lo reenviamos al host de la sala
                 if (!ws.isHost && ws.roomId && rooms[ws.roomId]) {
                     const room = rooms[ws.roomId];
                     if (room.host && room.host.readyState === WebSocket.OPEN) {
                         room.host.send(message);
-                        console.log(`Reenviando input de ${ws.playerName} al host`);
+                        console.log(`Reenviando input de ${ws.playerName} (ID: ${ws.playerId}) al host`);
                     }
                 }
                 break;
+
             default:
                 console.log(`Tipo de mensaje no manejado: ${data.type}`);
                 break;
@@ -120,69 +118,56 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
-        console.log('Cliente desconectado');
+        console.log(`Cliente ${ws.playerName} (ID: ${ws.playerId}) desconectado`);
         if (ws.roomId && rooms[ws.roomId]) {
             if (ws.isHost) {
-                // Si era el host, cerramos la sala y notificamos a los clientes
-                console.log(`Host ${ws.playerName} se desconectó, cerrando sala: ${ws.roomId}`);
+                console.log(`Host ${ws.playerName} (ID: ${ws.playerId}) se desconectó, cerrando sala: ${ws.roomId}`);
                 rooms[ws.roomId].clients.forEach(client => {
                     if (client.readyState === WebSocket.OPEN) {
-                        client.send(JSON.stringify({
-                            type: 'roomClosed'
-                        }));
+                        client.send(JSON.stringify({ type: 'roomClosed' }));
                         client.close();
                     }
                 });
                 delete rooms[ws.roomId];
             } else {
-                // Si era cliente, lo removemos de la lista
                 rooms[ws.roomId].clients = rooms[ws.roomId].clients.filter(c => c !== ws);
-                // Actualizamos la lista de jugadores
                 broadcastPlayerList(ws.roomId);
             }
         }
     });
 });
 
-// ----------------------------
 // Funciones Auxiliares
-// ----------------------------
 
-// Envía la lista de jugadores al host y a los clientes
+// Envía la lista de jugadores (con ID y nombre) a la sala
 function broadcastPlayerList(roomId) {
     const room = rooms[roomId];
     if (!room) return;
 
-    const hostSocket = room.host;
-    const clientSockets = room.clients;
-
-    // Obtenemos una lista de IDs o nombres
     const players = [];
-    if (hostSocket) {
-        players.push({ id: 'host', name: hostSocket.playerName || "Host" });
+    if (room.host) {
+        players.push({ id: room.host.playerId, name: room.host.playerName });
     }
-    clientSockets.forEach((client, index) => {
-        players.push({ id: `client-${index}`, name: client.playerName || `Cliente ${index}` });
+    room.clients.forEach(client => {
+        players.push({ id: client.playerId, name: client.playerName });
     });
 
-    // Mensaje
     const msg = JSON.stringify({
         type: 'playerList',
         players
     });
 
-    // Enviamos a host y clientes
-    if (hostSocket && hostSocket.readyState === WebSocket.OPEN) {
-        hostSocket.send(msg);
+    if (room.host && room.host.readyState === WebSocket.OPEN) {
+        room.host.send(msg);
     }
-    clientSockets.forEach(c => {
+    room.clients.forEach(c => {
         if (c.readyState === WebSocket.OPEN) {
             c.send(msg);
         }
     });
 }
 
-// Envía un mensaje JSON a todos (host y clientes) de una sala
+// Envía un mensaje JSON a todos en la sala
 function broadcastInRoom(roomId, obj) {
     const room = rooms[roomId];
     if (!room) return;
@@ -204,18 +189,13 @@ function handleWebRTCSignaling(ws, data) {
     if (!roomId || !rooms[roomId]) return;
     const room = rooms[roomId];
 
-    // Reenviamos la señal al "otro lado":
-    // - Si el mensaje viene del host, lo enviamos a todos los clientes
-    // - Si viene de un cliente, lo enviamos al host
     if (ws.isHost) {
-        // El host envía la señal a cada cliente
         room.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify(data));
             }
         });
     } else {
-        // Un cliente envía la señal al host
         if (room.host && room.host.readyState === WebSocket.OPEN) {
             room.host.send(JSON.stringify(data));
         }
