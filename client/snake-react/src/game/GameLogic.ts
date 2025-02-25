@@ -10,12 +10,15 @@ import {
 import { generateFood } from "./generateFood";
 import { generateObstacle } from "./generateObstacle";
 import eatSoundFile from "../assets/eat-sound.mp3";
+import deathSoundFile from "../assets/death-sound.mp3";
 
 export const updateGameState = (prevState: GameState): GameState => {
   if (prevState.gameOver) return prevState;
 
   const maxX = CANVAS_WIDTH / GRID_SIZE - 1;
   const maxY = CANVAS_HEIGHT / GRID_SIZE - 1;
+  const eatSound = new Audio(eatSoundFile);
+  const deathSound = new Audio(deathSoundFile);
 
   // Paso 1: calcular la nueva cabeza para cada serpiente (clampeada)
   const snakesWithNewHead = prevState.snakes.map((snake) => {
@@ -40,6 +43,7 @@ export const updateGameState = (prevState: GameState): GameState => {
     ) {
       console.warn(`Snake ${id} se colisionó consigo misma.`);
       deadSnakeIds.add(id);
+      deathSound.play();
     }
   });
 
@@ -58,6 +62,7 @@ export const updateGameState = (prevState: GameState): GameState => {
           } else {
             deadSnakeIds.add(snakeA.id);
           }
+          deathSound.play();
         }
       });
     }
@@ -74,6 +79,7 @@ export const updateGameState = (prevState: GameState): GameState => {
     ) {
       console.warn(`Snake ${snake.id} se comió un obstáculo.`);
       deadSnakeIds.add(snake.id);
+      deathSound.play();
     }
   });
 
@@ -81,7 +87,6 @@ export const updateGameState = (prevState: GameState): GameState => {
   let newFoodArray = prevState.food.slice();
   let newObstacles = [...prevState.obstacles];
   let newConsumedFood = prevState.consumedFood;
-  const eatSound = new Audio(eatSoundFile);
 
   const updatedSnakes: Snake[] = snakesWithNewHead
     .map((snake) => {
@@ -103,8 +108,12 @@ export const updateGameState = (prevState: GameState): GameState => {
           newFoodArray = newFoodArray.filter(
             (f) => !(f.x === snake.newHead.x && f.y === snake.newHead.y)
           );
-          newFoodArray.push(generateFood());
-          newConsumedFood += 1;
+          const foodToBeGeneratedQuantity = prevState.snakes.length;
+          newFoodArray = [
+            ...newFoodArray,
+            ...generateFood(foodToBeGeneratedQuantity),
+          ];
+          newConsumedFood += foodToBeGeneratedQuantity;
         }
         // Cada 2 comidas consumidas, generamos un obstáculo
         if (ateFood && newConsumedFood % 2 === 0) {

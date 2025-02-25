@@ -9,6 +9,8 @@ import useCreateRoom from "./hooks/useCreateRoom";
 import useJoinRoom from "./hooks/useJoinRoom";
 import { Player } from "./game/GameTypes";
 import { getMessageText } from "./game/utils";
+import backgroundMusic from "./assets/background-sound.mp3";
+import gameMusic from "./assets/game-sound.mp3";
 
 export enum GamePhase {
   START = "start",
@@ -27,6 +29,21 @@ const App: React.FC = () => {
   const [clientId, setClientId] = useState("");
   const { joinRoom } = useJoinRoom(socket, name, clientId);
   const [players, setPlayers] = useState<Player[]>([]);
+
+  const [audio, setAudio] = useState(new Audio());
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+
+  const toggleBackgroundSound = () => {
+    if (isAudioPlaying) {
+      audio.pause();
+    } else {
+      audio.loop = true;
+      audio
+        .play()
+        .catch((error) => console.error("Audio playback failed:", error));
+    }
+    setIsAudioPlaying(!isAudioPlaying);
+  };
 
   useEffect(() => {
     const ws = new WebSocket("https://4712-190-210-239-237.ngrok-free.app");
@@ -66,8 +83,24 @@ const App: React.FC = () => {
     };
   }, [socket]);
 
+  useEffect(() => {
+    if (phase === GamePhase.START) {
+      audio.pause();
+      setAudio(new Audio(backgroundMusic));
+    } else if (phase === GamePhase.GAME) {
+      audio.pause();
+      setAudio(new Audio(gameMusic));
+    }
+  }, [phase]);
+
   return (
     <div>
+      <button
+        className="absolute right-2 top-2"
+        onClick={toggleBackgroundSound}
+      >
+        {isAudioPlaying ? "🔇 Turn Off Sound" : "🔊 Play Sound"}
+      </button>
       {phase === GamePhase.START && (
         <StartScreen
           setName={setName}

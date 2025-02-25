@@ -16,6 +16,7 @@ import snakeBody from "../assets/snake-body.png";
 import snakeTail from "../assets/snake-tail.png";
 import food from "../assets/food.png";
 import obstacle from "../assets/obstacle.png";
+
 import {
   boardStyles,
   canvasContainerStyles,
@@ -31,9 +32,8 @@ interface GameViewProps {
   localPlayerId: string;
 }
 
-const initialGameState: GameState = {
+const initialGameState = {
   snakes: [],
-  food: [generateFood(), generateFood(), generateFood()],
   obstacles: [],
   consumedFood: 0,
   gameOver: false,
@@ -63,6 +63,7 @@ const GameView: React.FC<GameViewProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<GameState>({
     ...initialGameState,
+    food: generateFood(2 * players.length),
     snakes: players.map((player, i) => {
       const isHorizontal = Math.random() < 0.5;
       const direction = isHorizontal
@@ -73,7 +74,9 @@ const GameView: React.FC<GameViewProps> = ({
         id: player.id,
         segments: [{ x: (i + 1) * 2, y: (i + 1) * 2 }],
         direction,
-        color: !!player.colorIndex ? AVAILABLE_COLORS[player.colorIndex] : "green",
+        color: !!player.colorIndex
+          ? AVAILABLE_COLORS[player.colorIndex]
+          : "green",
       };
     }),
   });
