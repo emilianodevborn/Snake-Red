@@ -10,6 +10,11 @@ import {
 import { generateFood } from "../game/generateFood";
 import { updateGameState } from "../game/GameLogic";
 import { getMessageText } from "../game/utils";
+import snakeHead from "../assets/snake-head.png";
+import snakeBody from "../assets/snake-body.png";
+import snakeTail from "../assets/snake-tail.png";
+import food from "../assets/food.png";
+import obstacle from "../assets/obstacle.png";
 import {
   boardStyles,
   canvasContainerStyles,
@@ -43,6 +48,21 @@ const initialGameState: GameState = {
   consumedFood: 0,
   gameOver: false,
 };
+
+const headImage = new Image();
+headImage.src = snakeHead;
+
+const bodyImage = new Image();
+bodyImage.src = snakeBody;
+
+const tailImage = new Image();
+tailImage.src = snakeTail;
+
+const foodImage = new Image();
+foodImage.src = food;
+
+const obstable = new Image();
+obstable.src = obstacle;
 
 const GameView: React.FC<GameViewProps> = ({ role, socket, players }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -198,10 +218,16 @@ const GameView: React.FC<GameViewProps> = ({ role, socket, players }) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
     gameState.snakes.forEach((snake) => {
-      ctx.fillStyle = snake.color;
-      snake.segments.forEach((segment) => {
-        ctx.fillRect(
+      snake.segments.forEach((segment, index) => {
+        let img = bodyImage;
+
+        if (index === 0) img = headImage;
+        else if (index === snake.segments.length - 1) img = tailImage;
+
+        ctx.drawImage(
+          img,
           segment.x * GRID_SIZE,
           segment.y * GRID_SIZE,
           GRID_SIZE,
@@ -210,9 +236,10 @@ const GameView: React.FC<GameViewProps> = ({ role, socket, players }) => {
       });
     });
     // Show food
-    ctx.fillStyle = "red";
+    // ctx.fillStyle = "red";
     gameState.food.forEach((food) => {
-      ctx.fillRect(
+      ctx.drawImage(
+        foodImage,
         food.x * GRID_SIZE,
         food.y * GRID_SIZE,
         GRID_SIZE,
@@ -220,9 +247,11 @@ const GameView: React.FC<GameViewProps> = ({ role, socket, players }) => {
       );
     });
     // Show obstacles
-    ctx.fillStyle = "gray"; // Color para los obstáculos
+
+    // ctx.fillStyle = "gray"; // Color para los obstáculos
     gameState.obstacles.forEach((obstacle) => {
-      ctx.fillRect(
+      ctx.drawImage(
+        obstable,
         obstacle.x * GRID_SIZE,
         obstacle.y * GRID_SIZE,
         GRID_SIZE,
