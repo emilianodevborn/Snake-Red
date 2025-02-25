@@ -1,9 +1,10 @@
 // src/StartScreen.tsx
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import GameInputs from "./components/GameInputs";
 import GameButtons from "./components/GameButtons";
 import Separator from "./components/Separator";
+import backgroundMusic from "./assets/background-sound.mp3";
 
 interface StartScreenProps {
   onSelectClient: () => void;
@@ -25,8 +26,26 @@ const StartScreen: React.FC<StartScreenProps> = ({
   const isJoinButtonDisabled = clientId.trim() === "" || name.trim() === "";
   const isCreateButtonDisabled = name.trim() === "";
 
+  const [audio] = useState(new Audio(backgroundMusic));
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const toggleSound = () => {
+    if (isPlaying) {
+      audio.pause(); // Pause the audio
+    } else {
+      audio.loop = true;
+      audio
+        .play()
+        .catch((error) => console.error("Audio playback failed:", error));
+    }
+    setIsPlaying(!isPlaying); // Toggle state
+  };
+
   return (
     <div className="bg-[#F7F6DF] w-screen h-screen flex flex-col justify-center items-center gap-10 text-white">
+      <button className="absolute right-2 top-2" onClick={toggleSound}>
+        {isPlaying ? "🔇 Turn Off Sound" : "🔊 Play Sound"}
+      </button>
       <div className="text-6xl font-bold text-black">Snake Multiplayer</div>
       <div className="text-4xl font-bold text-red-500">How to play?</div>
       <GameInputs
