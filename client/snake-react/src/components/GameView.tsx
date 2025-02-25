@@ -25,6 +25,7 @@ import {
   controlsStyles,
   wrapperStyles,
 } from "./styles";
+import {computeBotState, getBotMove, mapActionToDirection} from "./bot";
 
 interface GameViewProps {
   role: "host" | "client" | null;
@@ -97,15 +98,47 @@ const GameView: React.FC<GameViewProps> = ({
   // Para el host: enviar actualizaciones periódicas del estado
   useEffect(() => {
     if (role !== "host") return;
-    const interval = setInterval(() => {
-      setGameState((prevState) => {
-        const newState = updateGameState(prevState, difficulty);
-        socket.send(JSON.stringify({ type: "gameState", state: newState }));
-        return newState;
+
+    const updateGame = async () => {
+      // 1. Actualiza el estado normal del juego
+      const newState = updateGameState(gameState, difficulty);
+
+      // 2. Filtra los bots (suponiendo que players contiene los jugadores con isBot)
+      const bots = players.filter((p: any) => p.isBot);
+
+      // 3. Para cada serpiente, si es bot, actualiza su dirección de forma asíncrona
+      const updatedSnakesPromises = newState.snakes.map(async (snake) => {
+        if (bots.some(bot => bot.id === snake.id)) {
+          const botState = computeBotState(newState, snake);
+          try {
+            const action = await getBotMove(botState);
+            const newDirection = mapActionToDirection(snake.direction, action);
+            return { ...snake, direction: newDirection };
+          } catch (err) {
+            console.error("Error en la IA del bot:", err);
+            return snake;
+          }
+        } else {
+          return snake;
+        }
       });
+
+      const updatedSnakes = await Promise.all(updatedSnakesPromises);
+
+      const finalState: GameState = {
+        ...newState,
+        snakes: updatedSnakes,
+      };
+
+      socket.send(JSON.stringify({ type: "gameState", state: finalState }));
+      setGameState(finalState);
+    };
+
+    const interval = setInterval(() => {
+      updateGame()
     }, DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS]);
     return () => clearInterval(interval);
-  }, [role, socket]);
+  }, [role, socket, gameState, players]);
 
   // Para el cliente: recibir actualizaciones del estado
   useEffect(() => {

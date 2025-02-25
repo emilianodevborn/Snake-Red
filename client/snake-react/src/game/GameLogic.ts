@@ -23,7 +23,7 @@ export const updateGameState = (
   const eatSound = new Audio(eatSoundFile);
   const deathSound = new Audio(deathSoundFile);
 
-  // Paso 1: calcular la nueva cabeza para cada serpiente (clampeada)
+  // Paso 1: calcular la nueva cabeza para cada serpiente (sin clamping)
   const snakesWithNewHead = prevState.snakes.map((snake) => {
     const head = snake.segments[0];
     let calcX = head.x + snake.direction.x;
@@ -35,15 +35,25 @@ export const updateGameState = (
     return { ...snake, newHead };
   });
 
-  // Paso 2: self-collision
+  // Paso 1.5: Validar colisión con la pared
   const deadSnakeIds = new Set<string>();
   snakesWithNewHead.forEach((snake) => {
-    const { newHead, segments, id } = snake;
+    const { newHead, id } = snake;
     if (
-      segments
-        .slice(1)
-        .some((seg) => seg.x === newHead.x && seg.y === newHead.y)
+      newHead.x < 0 ||
+      newHead.x >= maxX ||
+      newHead.y < 0 ||
+      newHead.y >= maxY
     ) {
+      console.warn(`Snake ${id} colisionó con la pared.`);
+      deadSnakeIds.add(id);
+    }
+  });
+
+  // Paso 2: self-collision
+  snakesWithNewHead.forEach((snake) => {
+    const { newHead, segments, id } = snake;
+    if (segments.slice(1).some((seg) => seg.x === newHead.x && seg.y === newHead.y)) {
       console.warn(`Snake ${id} se colisionó consigo misma.`);
       deadSnakeIds.add(id);
       deathSound.play();
@@ -71,16 +81,11 @@ export const updateGameState = (
     }
   }
 
-  // Paso 4: cuando un cienpies colisiona con obstaculos, insertamos el ID correspondiente a
-  // el cienpies muerto como un array dentro del array existentex
+  // Paso 4: Verificar colisiones con obstáculos
   snakesWithNewHead.forEach((snake) => {
     const { newHead } = snake;
-    if (
-      prevState.obstacles.some(
-        (obstacle) => obstacle.x === newHead.x && obstacle.y === newHead.y
-      )
-    ) {
-      console.warn(`Snake ${snake.id} se comió un obstáculo.`);
+    if (prevState.obstacles.some(obstacle => obstacle.x === newHead.x && obstacle.y === newHead.y)) {
+      console.warn(`Snake ${snake.id} se chocó con un obstáculo.`);
       deadSnakeIds.add(snake.id);
       deathSound.play();
     }
@@ -101,16 +106,10 @@ export const updateGameState = (
         return null; // La serpiente muere
       } else {
         let ateFood = false;
-        if (
-          newFoodArray.some(
-            (f) => f.x === snake.newHead.x && f.y === snake.newHead.y
-          )
-        ) {
+        if (newFoodArray.some((f) => f.x === snake.newHead.x && f.y === snake.newHead.y)) {
           ateFood = true;
           eatSound.play();
-          newFoodArray = newFoodArray.filter(
-            (f) => !(f.x === snake.newHead.x && f.y === snake.newHead.y)
-          );
+          newFoodArray = newFoodArray.filter((f) => !(f.x === snake.newHead.x && f.y === snake.newHead.y));
           const foodToBeGeneratedQuantity = prevState.snakes.length;
           newFoodArray = [
             ...newFoodArray,

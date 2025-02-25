@@ -70,6 +70,16 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
     }
   };
 
+  const addBot = () => {
+    if (socket && isHost) {
+      const addBotMessage = {
+        type: 'addBot',
+        botName: 'SuperBot'
+      };
+      socket.send(JSON.stringify(addBotMessage));
+    }
+  }
+
   return (
     <div
       style={{
@@ -266,7 +276,12 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
           </select>
         </fieldset>
       )}
-      {isHost && <GameButtons onClick={startGame} text="Start Game" />}
+      {isHost && (
+        <>
+          <GameButtons onClick={startGame} text="Iniciar Juego"/>
+          <GameButtons onClick={addBot} text="Add bot"/>
+        </>
+      )}
     </div>
   );
 };
