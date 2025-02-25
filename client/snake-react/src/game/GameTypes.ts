@@ -24,8 +24,8 @@ export type Player = {
 };
 
 // Constantes del juego
-export const CANVAS_WIDTH = 600;
-export const CANVAS_HEIGHT = 400;
+export const CANVAS_WIDTH = 1200;
+export const CANVAS_HEIGHT = 800;
 export const GRID_SIZE = 20;
 
 export const AVAILABLE_COLORS = [
