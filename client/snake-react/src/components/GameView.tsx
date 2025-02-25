@@ -26,23 +26,11 @@ interface GameViewProps {
   role: "host" | "client" | null;
   socket: WebSocket;
   players: Player[];
+  localPlayerId: string;
 }
 
 const initialGameState: GameState = {
-  snakes: [
-    {
-      id: "host",
-      segments: [{ x: 5, y: 5 }],
-      direction: { x: 1, y: 0 },
-      color: "green",
-    },
-    {
-      id: "client1",
-      segments: [{ x: 10, y: 5 }],
-      direction: { x: 1, y: 0 },
-      color: "blue",
-    },
-  ],
+  snakes: [],
   food: [generateFood(), generateFood(), generateFood()],
   obstacles: [],
   consumedFood: 0,
@@ -64,9 +52,25 @@ foodImage.src = food;
 const obstable = new Image();
 obstable.src = obstacle;
 
-const GameView: React.FC<GameViewProps> = ({ role, socket, players }) => {
+const GameView: React.FC<GameViewProps> = ({
+  role,
+  socket,
+  players,
+  localPlayerId,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [gameState, setGameState] = useState<GameState>(initialGameState);
+  const [gameState, setGameState] = useState<GameState>({
+    ...initialGameState,
+    snakes: players.map((player, i) => ({
+      id: player.id,
+      segments: [{ x: (i + 1) * 2, y: (i + 1) * 2 }],
+      direction: {
+        x: Math.random() < 0.5 ? 1 : -1,
+        y: Math.random() < 0.5 ? 1 : -1,
+      },
+      color: player.color || "green",
+    })),
+  });
 
   // Para el host: enviar actualizaciones periódicas del estado
   useEffect(() => {
@@ -74,7 +78,6 @@ const GameView: React.FC<GameViewProps> = ({ role, socket, players }) => {
     const interval = setInterval(() => {
       setGameState((prevState) => {
         const newState = updateGameState(prevState);
-        console.log("Host envía estado actualizado:", newState);
         socket.send(JSON.stringify({ type: "gameState", state: newState }));
         return newState;
       });
@@ -89,7 +92,6 @@ const GameView: React.FC<GameViewProps> = ({ role, socket, players }) => {
       try {
         const data = JSON.parse(event.data);
         if (data.type === "gameState") {
-          console.log("Cliente recibe estado:", data.state);
           setGameState(data.state);
         }
       } catch (err) {
@@ -131,43 +133,47 @@ const GameView: React.FC<GameViewProps> = ({ role, socket, players }) => {
   // Manejo de teclado para el host (localmente, para cambiar su propia dirección)
   useEffect(() => {
     if (role !== "host") return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       setGameState((prevState) => {
         const updatedSnakes = prevState.snakes.map((snake) => {
-          if (snake.id === "host") {
-            let newDir = snake.direction;
-            switch (e.key) {
-              case "ArrowUp":
-              case "w":
-              case "W":
-                if (snake.direction.y !== 1) newDir = { x: 0, y: -1 };
-                break;
-              case "ArrowDown":
-              case "s":
-              case "S":
-                if (snake.direction.y !== -1) newDir = { x: 0, y: 1 };
-                break;
-              case "ArrowLeft":
-              case "a":
-              case "A":
-                if (snake.direction.x !== 1) newDir = { x: -1, y: 0 };
-                break;
-              case "ArrowRight":
-              case "d":
-              case "D":
-                if (snake.direction.x !== -1) newDir = { x: 1, y: 0 };
-                break;
-              default:
-                break;
-            }
-            console.log("Host cambia dirección a:", newDir);
-            return { ...snake, direction: newDir };
+          if (snake.id !== localPlayerId) {
+            return snake;
           }
-          return snake;
+
+          let newDir = snake.direction;
+          switch (e.key) {
+            case "ArrowUp":
+            case "w":
+            case "W":
+              if (snake.direction.y !== 1) newDir = { x: 0, y: -1 };
+              break;
+            case "ArrowDown":
+            case "s":
+            case "S":
+              if (snake.direction.y !== -1) newDir = { x: 0, y: 1 };
+              break;
+            case "ArrowLeft":
+            case "a":
+            case "A":
+              if (snake.direction.x !== 1) newDir = { x: -1, y: 0 };
+              break;
+            case "ArrowRight":
+            case "d":
+            case "D":
+              if (snake.direction.x !== -1) newDir = { x: 1, y: 0 };
+              break;
+            default:
+              break;
+          }
+
+          return { ...snake, direction: newDir };
         });
+
         return { ...prevState, snakes: updatedSnakes };
       });
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [role]);
@@ -201,9 +207,9 @@ const GameView: React.FC<GameViewProps> = ({ role, socket, players }) => {
         default:
           break;
       }
+
       if (newDir) {
-        const message = { type: "input", id: "client1", direction: newDir };
-        console.log("Cliente envía input:", message);
+        const message = { type: "input", id: localPlayerId, direction: newDir };
         socket.send(JSON.stringify(message));
       }
     };
