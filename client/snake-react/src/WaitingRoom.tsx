@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
 
 import GameButtons from "./components/GameButtons";
-interface Player {
-  id: string;
-  name: string;
-}
+import type { Player } from "./game/GameTypes";
+import { AVAILABLE_COLORS } from "./game/GameTypes";
 
 interface WaitingRoomProps {
   onStartGame: () => void;
   isHost: boolean;
   socket: WebSocket | null;
   players: Player[];
+  localPlayerId: string;
 }
 
 const WaitingRoom: React.FC<WaitingRoomProps> = ({
@@ -18,8 +17,10 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
   isHost,
   socket,
   players,
+  localPlayerId,
 }) => {
   const [roomId, setRoomId] = useState<string>("");
+  const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
 
   useEffect(() => {
     if (!socket) return;
@@ -46,6 +47,18 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
       socket.removeEventListener("message", handleMessage);
     };
   }, [socket, onStartGame, isHost]);
+
+  const handleColorSelect = (playerId: string, newColorIndex: number) => {
+    if (socket) {
+      socket.send(JSON.stringify({
+        type: "changeColor",
+        roomId,
+        playerId,
+        newColorIndex
+      }));
+      setOpenColorPicker(false);
+    }
+  };
 
   const startGame = () => {
     if (socket) {
@@ -93,20 +106,137 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
         style={{
           fontSize: "14px",
           fontWeight: "bold",
-          color: "red",
-          flexDirection: "row",
+          color: "black",
+          flexDirection: "column",
           display: "flex",
           backgroundColor: "rgba(0, 0, 0, 0.3)",
           width: "100%",
           justifyContent: "center",
           padding: "10px",
+          gap: "10px",
+          borderRadius: "10px",
         }}
       >
         Players:
+        {players.map((player) => (
+          <div
+            key={player.id}
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              width: "100%",
+              padding: "10px",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "20px",
+                fontWeight: "bold",
+                color: AVAILABLE_COLORS[player.colorIndex || 0],
+              }}
+            >
+              {player.name}
+            </div>
+            <div style={{ position: "relative" }}>
+              <div
+                style={{
+                  backgroundColor: AVAILABLE_COLORS[player.colorIndex || 0],
+                  width: "15px",
+                  height: "15px",
+                  borderRadius: "50%",
+                  cursor: player.id === localPlayerId ? "pointer" : "not-allowed",
+                  border: "1px solid black",
+                }}
+                onClick={() => player.id === localPlayerId && setOpenColorPicker(!openColorPicker)}
+              />
+              {openColorPicker && player.id === localPlayerId && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "20px",
+                    right: "0",
+                    backgroundColor: "white",
+                    padding: "5px",
+                    borderRadius: "5px",
+                    border: "1px solid black",
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "5px",
+                    width: "100px",
+                    zIndex: 1000,
+                    justifyContent: "center",
+                  }}
+                >
+                  {AVAILABLE_COLORS.map((color, index) => {
+                    const isAlreadyUsed = players.some(p => p.colorIndex === index);
+                    const isPlayerColor = player.colorIndex === index;
+                    const isDisabled = isAlreadyUsed && !isPlayerColor;
+                    
+                    return (
+                      <div
+                        key={color}
+                        style={{
+                          position: 'relative',
+                          width: "20px",
+                          height: "20px",
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center'
+                        }}
+                      >
+                        <div
+                          style={{
+                            backgroundColor: color,
+                            width: "15px",
+                            height: "15px",
+                            borderRadius: "50%",
+                            cursor: isDisabled ? "not-allowed" : "pointer",
+                            border: "1px solid black",
+                            opacity: isDisabled ? 0.5 : 1,
+                          }}
+                          onClick={() => !isDisabled && handleColorSelect(player.id, index)}
+                        />
+                        {isDisabled && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            color: 'red',
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            pointerEvents: 'none'
+                          }}>
+                            ✕
+                          </div>
+                        )}
+                        {isPlayerColor && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            color: 'white',
+                            fontSize: '12px',
+                            fontWeight: 'bold',
+                            pointerEvents: 'none',
+                            textShadow: '0px 0px 2px black'
+                          }}>
+                            ✓
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
-      {players.map((player) => (
-        <div key={player.id}>{player.name}</div>
-      ))}
       {isHost && <GameButtons onClick={startGame} text="Iniciar Juego" />}
     </div>
   );

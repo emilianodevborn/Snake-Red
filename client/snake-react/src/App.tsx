@@ -44,7 +44,7 @@ const App: React.FC = () => {
           const data = JSON.parse(text);
           if (data.type === "roomCreated") {
             setLocalPlayerId(data.playerId);
-            setPlayers([{ id: data.playerId, name: data.name }]);
+            setPlayers([{ id: data.playerId, name: data.name, colorIndex: data.colorIndex }]);
           }
 
           if (data.type === "playerList") {
@@ -97,6 +97,7 @@ const App: React.FC = () => {
             isHost={role === "host"}
             socket={socket}
             players={players}
+            localPlayerId={localPlayerId}
           />
         )}
       </Modal>
