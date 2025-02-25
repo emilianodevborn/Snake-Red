@@ -5,6 +5,7 @@ import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
   GRID_SIZE,
+  AVAILABLE_COLORS,
   type Player,
 } from "../game/GameTypes";
 import { generateFood } from "../game/generateFood";
@@ -68,7 +69,7 @@ const GameView: React.FC<GameViewProps> = ({
         x: Math.random() < 0.5 ? 1 : -1,
         y: Math.random() < 0.5 ? 1 : -1,
       },
-      color: player.color || "green",
+      color: !!player.colorIndex ? AVAILABLE_COLORS[player.colorIndex] : "green",
     })),
   });
 

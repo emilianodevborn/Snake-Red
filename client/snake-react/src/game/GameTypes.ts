@@ -20,7 +20,7 @@ export interface GameState {
 export type Player = {
   id: string;
   name: string;
-  color?: (typeof AVAILABLE_COLORS)[number];
+  colorIndex?: number;
 };
 
 // Constantes del juego
