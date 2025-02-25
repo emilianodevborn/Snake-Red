@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-
+import { useEffect, useState } from "react";
 import GameButtons from "./components/GameButtons";
 import type { Player } from "./game/GameTypes";
 import { AVAILABLE_COLORS } from "./game/GameTypes";
@@ -10,6 +9,7 @@ interface WaitingRoomProps {
   socket: WebSocket | null;
   players: Player[];
   localPlayerId: string;
+  onDifficultyChange: (difficulty: string) => void;
 }
 
 const WaitingRoom: React.FC<WaitingRoomProps> = ({
@@ -18,6 +18,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
   socket,
   players,
   localPlayerId,
+  onDifficultyChange,
 }) => {
   const [roomId, setRoomId] = useState<string>("");
   const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
@@ -50,12 +51,14 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
 
   const handleColorSelect = (playerId: string, newColorIndex: number) => {
     if (socket) {
-      socket.send(JSON.stringify({
-        type: "changeColor",
-        roomId,
-        playerId,
-        newColorIndex
-      }));
+      socket.send(
+        JSON.stringify({
+          type: "changeColor",
+          roomId,
+          playerId,
+          newColorIndex,
+        })
+      );
       setOpenColorPicker(false);
     }
   };
@@ -87,7 +90,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
           textTransform: "uppercase",
         }}
       >
-        Waiting for start...
+        Waiting for other players...
       </div>
       {roomId && (
         <div
@@ -147,10 +150,14 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
                   width: "15px",
                   height: "15px",
                   borderRadius: "50%",
-                  cursor: player.id === localPlayerId ? "pointer" : "not-allowed",
+                  cursor:
+                    player.id === localPlayerId ? "pointer" : "not-allowed",
                   border: "1px solid black",
                 }}
-                onClick={() => player.id === localPlayerId && setOpenColorPicker(!openColorPicker)}
+                onClick={() =>
+                  player.id === localPlayerId &&
+                  setOpenColorPicker(!openColorPicker)
+                }
               />
               {openColorPicker && player.id === localPlayerId && (
                 <div
@@ -171,20 +178,22 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
                   }}
                 >
                   {AVAILABLE_COLORS.map((color, index) => {
-                    const isAlreadyUsed = players.some(p => p.colorIndex === index);
+                    const isAlreadyUsed = players.some(
+                      (p) => p.colorIndex === index
+                    );
                     const isPlayerColor = player.colorIndex === index;
                     const isDisabled = isAlreadyUsed && !isPlayerColor;
-                    
+
                     return (
                       <div
                         key={color}
                         style={{
-                          position: 'relative',
+                          position: "relative",
                           width: "20px",
                           height: "20px",
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center'
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
                         }}
                       >
                         <div
@@ -197,34 +206,40 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
                             border: "1px solid black",
                             opacity: isDisabled ? 0.5 : 1,
                           }}
-                          onClick={() => !isDisabled && handleColorSelect(player.id, index)}
+                          onClick={() =>
+                            !isDisabled && handleColorSelect(player.id, index)
+                          }
                         />
                         {isDisabled && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            color: 'red',
-                            fontSize: '14px',
-                            fontWeight: 'bold',
-                            pointerEvents: 'none'
-                          }}>
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "50%",
+                              left: "50%",
+                              transform: "translate(-50%, -50%)",
+                              color: "red",
+                              fontSize: "14px",
+                              fontWeight: "bold",
+                              pointerEvents: "none",
+                            }}
+                          >
                             ✕
                           </div>
                         )}
                         {isPlayerColor && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            color: 'white',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            pointerEvents: 'none',
-                            textShadow: '0px 0px 2px black'
-                          }}>
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "50%",
+                              left: "50%",
+                              transform: "translate(-50%, -50%)",
+                              color: "white",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              pointerEvents: "none",
+                              textShadow: "0px 0px 2px black",
+                            }}
+                          >
                             ✓
                           </div>
                         )}
@@ -237,7 +252,21 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
           </div>
         ))}
       </div>
-      {isHost && <GameButtons onClick={startGame} text="Iniciar Juego" />}
+      {isHost && (
+        <fieldset style={{ width: "100%", border: 0 }}>
+          <legend>Choose the difficulty</legend>
+          <select
+            style={{ width: "100%", padding: "6px", marginTop: "6px" }}
+            onChange={(e) => onDifficultyChange(e.target.value)}
+            defaultValue="2"
+          >
+            <option value="1">Let's take it easy</option>
+            <option value="2">I'm ready for a challenge</option>
+            <option value="3">Bring it on!</option>
+          </select>
+        </fieldset>
+      )}
+      {isHost && <GameButtons onClick={startGame} text="Start Game" />}
     </div>
   );
 };

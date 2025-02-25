@@ -7,6 +7,7 @@ import {
   AVAILABLE_COLORS,
   type Player,
   type Coordinate,
+  DIFFICULTY_LEVELS,
 } from "../game/GameTypes";
 import { generateFood } from "../game/generateFood";
 import { updateGameState } from "../game/GameLogic";
@@ -30,6 +31,7 @@ interface GameViewProps {
   socket: WebSocket;
   players: Player[];
   localPlayerId: string;
+  difficulty: string;
 }
 
 const initialGameState = {
@@ -59,6 +61,7 @@ const GameView: React.FC<GameViewProps> = ({
   socket,
   players,
   localPlayerId,
+  difficulty,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<GameState>({
@@ -96,11 +99,11 @@ const GameView: React.FC<GameViewProps> = ({
     if (role !== "host") return;
     const interval = setInterval(() => {
       setGameState((prevState) => {
-        const newState = updateGameState(prevState);
+        const newState = updateGameState(prevState, difficulty);
         socket.send(JSON.stringify({ type: "gameState", state: newState }));
         return newState;
       });
-    }, 150);
+    }, DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS]);
     return () => clearInterval(interval);
   }, [role, socket]);
 
