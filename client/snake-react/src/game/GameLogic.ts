@@ -120,17 +120,17 @@ export const updateGameState = (prevState: GameState): GameState => {
     })
     .filter((snake) => snake !== null) as Snake[];
 
-  // Paso 6: Game over si la serpiente del host ya no existe
-  let gameOver: boolean = prevState.gameOver;
+  // Paso 6:Cuando es game over?
+  /*   let gameOver: boolean = prevState.gameOver;
   if (!updatedSnakes.some((s) => s.id === "host")) {
     gameOver = true;
-  }
+  } */
 
   return {
     snakes: updatedSnakes,
     food: newFoodArray,
     obstacles: newObstacles,
     consumedFood: newConsumedFood,
-    gameOver,
+    gameOver: false,
   };
 };
