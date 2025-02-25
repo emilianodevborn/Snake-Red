@@ -14,6 +14,10 @@ export const wrapperStyles: CSSProperties = {
 export const canvasContainerStyles: CSSProperties = {
   border: "1px solid white",
   borderRadius: "6px",
+  overflow: "hidden",
+  width: "600px",
+  height: "400px",
+  position: "relative",
 };
 
 export const boardStyles: CSSProperties = {
@@ -31,4 +35,9 @@ export const controlsStyles: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   gap: "24px",
+};
+
+export const canvasStyles: CSSProperties = {
+  position: "absolute",
+  backgroundColor: "lightgray"
 };

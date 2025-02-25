@@ -1,5 +1,4 @@
-// src/components/GameView.tsx
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import {
   GameState,
   CANVAS_WIDTH,
@@ -7,10 +6,11 @@ import {
   GRID_SIZE,
   AVAILABLE_COLORS,
   type Player,
+  type Coordinate,
 } from "../game/GameTypes";
 import { generateFood } from "../game/generateFood";
 import { updateGameState } from "../game/GameLogic";
-import { getMessageText } from "../game/utils";
+import { getConstrainedTransform, getMessageText } from "../game/utils";
 import snakeHead from "../assets/snake-head.png";
 import snakeBody from "../assets/snake-body.png";
 import snakeTail from "../assets/snake-tail.png";
@@ -19,6 +19,7 @@ import obstacle from "../assets/obstacle.png";
 import {
   boardStyles,
   canvasContainerStyles,
+  canvasStyles,
   controlsStyles,
   wrapperStyles,
 } from "./styles";
@@ -62,16 +63,30 @@ const GameView: React.FC<GameViewProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<GameState>({
     ...initialGameState,
-    snakes: players.map((player, i) => ({
-      id: player.id,
-      segments: [{ x: (i + 1) * 2, y: (i + 1) * 2 }],
-      direction: {
-        x: Math.random() < 0.5 ? 1 : -1,
-        y: Math.random() < 0.5 ? 1 : -1,
-      },
-      color: !!player.colorIndex ? AVAILABLE_COLORS[player.colorIndex] : "green",
-    })),
+    snakes: players.map((player, i) => {
+      const isHorizontal = Math.random() < 0.5;
+      const direction = isHorizontal
+        ? { x: Math.random() < 0.5 ? 1 : -1, y: 0 }
+        : { x: 0, y: Math.random() < 0.5 ? 1 : -1 };
+
+      return {
+        id: player.id,
+        segments: [{ x: (i + 1) * 2, y: (i + 1) * 2 }],
+        direction,
+        color: !!player.colorIndex ? AVAILABLE_COLORS[player.colorIndex] : "green",
+      };
+    }),
   });
+
+  const snakePosition: Coordinate = useMemo(() => {
+    const currentPlayer = gameState.snakes.find(
+      (snake) => snake.id === localPlayerId
+    );
+
+    return (
+      currentPlayer?.newHead || currentPlayer?.segments[0] || { x: 0, y: 0 }
+    );
+  }, [gameState]);
 
   // Para el host: enviar actualizaciones periódicas del estado
   useEffect(() => {
@@ -284,12 +299,20 @@ const GameView: React.FC<GameViewProps> = ({
             <div>Right (D or ArrowRight)</div>
           </div>
         </div>
-        <canvas
-          ref={canvasRef}
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
-          style={canvasContainerStyles}
-        />
+        <div style={canvasContainerStyles}>
+          <canvas
+            ref={canvasRef}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+            style={{
+              ...canvasStyles,
+              transform: (() => {
+                const transform = getConstrainedTransform(snakePosition);
+                return `translate(${transform.x}px, ${transform.y}px)`;
+              })(),
+            }}
+          />
+        </div>
       </div>
     </div>
   );
