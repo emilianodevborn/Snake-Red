@@ -15,7 +15,6 @@ import { getConstrainedTransform, getMessageText } from "../game/utils";
 import snakeHead from "../assets/snake-head.png";
 import snakeBody from "../assets/snake-body.png";
 import snakeTail from "../assets/snake-tail.png";
-import food from "../assets/food.png";
 import obstacle from "../assets/obstacle.png";
 
 import {
@@ -25,6 +24,7 @@ import {
   controlsStyles,
   wrapperStyles,
 } from "./styles";
+import { generateRandomFoodSprite } from "../game/generateRandomFoodSprite";
 import {computeBotState, getBotMove, mapActionToDirection} from "./bot";
 
 interface GameViewProps {
@@ -50,9 +50,6 @@ bodyImage.src = snakeBody;
 
 const tailImage = new Image();
 tailImage.src = snakeTail;
-
-const foodImage = new Image();
-foodImage.src = food;
 
 const obstable = new Image();
 obstable.src = obstacle;
@@ -298,11 +295,11 @@ const GameView: React.FC<GameViewProps> = ({
     });
     // Show food
     // ctx.fillStyle = "red";
-    gameState.food.forEach((food) => {
+    gameState.food.forEach(({ coordinates, sprite }) => {
       ctx.drawImage(
-        foodImage,
-        food.x * GRID_SIZE,
-        food.y * GRID_SIZE,
+        sprite,
+        coordinates.x * GRID_SIZE,
+        coordinates.y * GRID_SIZE,
         GRID_SIZE,
         GRID_SIZE
       );
