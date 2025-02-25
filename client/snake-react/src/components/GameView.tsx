@@ -5,13 +5,14 @@ import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
   GRID_SIZE,
+  type Player,
 } from "../game/GameTypes";
 import { generateFood } from "../game/generateFood";
 import { updateGameState } from "../game/GameLogic";
 import { getMessageText } from "../game/utils";
 import {
   boardStyles,
-  canvasStyles,
+  canvasContainerStyles,
   controlsStyles,
   wrapperStyles,
 } from "./styles";
@@ -19,6 +20,7 @@ import {
 interface GameViewProps {
   role: "host" | "client" | null;
   socket: WebSocket;
+  players: Player[];
 }
 
 const initialGameState: GameState = {
@@ -42,7 +44,7 @@ const initialGameState: GameState = {
   gameOver: false,
 };
 
-const GameView: React.FC<GameViewProps> = ({ role, socket }) => {
+const GameView: React.FC<GameViewProps> = ({ role, socket, players }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<GameState>(initialGameState);
 
@@ -250,7 +252,7 @@ const GameView: React.FC<GameViewProps> = ({ role, socket }) => {
           ref={canvasRef}
           width={CANVAS_WIDTH}
           height={CANVAS_HEIGHT}
-          style={canvasStyles}
+          style={canvasContainerStyles}
         />
       </div>
     </div>
