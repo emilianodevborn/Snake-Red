@@ -12,7 +12,10 @@ import { generateObstacle } from "./generateObstacle";
 import eatSoundFile from "../assets/eat-sound.mp3";
 import deathSoundFile from "../assets/death-sound.mp3";
 
-export const updateGameState = (prevState: GameState): GameState => {
+export const updateGameState = (
+  prevState: GameState,
+  difficulty: string
+): GameState => {
   if (prevState.gameOver) return prevState;
 
   const maxX = CANVAS_WIDTH / GRID_SIZE - 1;
@@ -116,7 +119,8 @@ export const updateGameState = (prevState: GameState): GameState => {
           newConsumedFood += foodToBeGeneratedQuantity;
         }
         // Cada 2 comidas consumidas, generamos un obstáculo
-        if (ateFood && newConsumedFood % 2 === 0) {
+        const parsedDifficulty = parseInt(difficulty);
+        if (ateFood && newConsumedFood % parsedDifficulty === 0) {
           const obstacle = generateObstacle();
           newObstacles.push(obstacle);
           console.log("Generado obstáculo en:", obstacle);

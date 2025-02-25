@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [localPlayerId, setLocalPlayerId] = useState<string>("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [name, setName] = useState<string>("");
+  const [difficulty, setDifficulty] = useState<string>("1");
   const { isJoined, createRoom } = useCreateRoom(socket, name);
   const [clientId, setClientId] = useState("");
   const { joinRoom } = useJoinRoom(socket, name, clientId);
@@ -131,6 +132,7 @@ const App: React.FC = () => {
             socket={socket}
             players={players}
             localPlayerId={localPlayerId}
+            onDifficultyChange={setDifficulty}
           />
         )}
       </Modal>
@@ -153,6 +155,7 @@ const App: React.FC = () => {
           socket={socket}
           players={players}
           localPlayerId={localPlayerId}
+          difficulty={difficulty}
         />
       )}
     </div>

@@ -40,3 +40,9 @@ export const AVAILABLE_COLORS = [
   "gray",
   "black",
 ] as const;
+
+export const DIFFICULTY_LEVELS = {
+  "1": 150,
+  "2": 100,
+  "3": 50,
+} as const;
