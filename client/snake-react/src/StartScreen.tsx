@@ -51,10 +51,10 @@ const StartScreen: React.FC<StartScreenProps> = ({ onSelectClient, onSelectHost,
                 gap: '10px'
             }}>
                 <GameInputs label="Enter game id" value={clientId} onChange={setClientId} placeholder="Game id" />
-                <GameButtons onClick={onSelectClient} color={isJoinButtonDisabled ? 'gray' : 'black'} text="Join game" disabled={isJoinButtonDisabled} />
+                <GameButtons width="20%" onClick={onSelectClient} color={isJoinButtonDisabled ? 'gray' : 'black'} text="Join game" disabled={isJoinButtonDisabled} />
             </div>
             <Separator label="Or" />
-            <GameButtons onClick={onSelectHost} color={isCreateButtonDisabled ? 'gray' : 'black'} text="Create game" disabled={isCreateButtonDisabled} />
+            <GameButtons width="20%" onClick={onSelectHost} color={isCreateButtonDisabled ? 'gray' : 'black'} text="Create game" disabled={isCreateButtonDisabled} />
         </div>
     );
 };

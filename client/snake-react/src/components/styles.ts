@@ -11,7 +11,7 @@ export const wrapperStyles: CSSProperties = {
   overflow: "hidden",
 };
 
-export const canvasStyles: CSSProperties = {
+export const canvasContainerStyles: CSSProperties = {
   border: "1px solid white",
   borderRadius: "6px",
 };

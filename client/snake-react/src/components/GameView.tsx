@@ -5,6 +5,7 @@ import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
   GRID_SIZE,
+  type Player,
 } from "../game/GameTypes";
 import { generateFood } from "../game/generateFood";
 import { updateGameState } from "../game/GameLogic";
@@ -16,7 +17,7 @@ import food from "../assets/food.png";
 import obstacle from "../assets/obstacle.png";
 import {
   boardStyles,
-  canvasStyles,
+  canvasContainerStyles,
   controlsStyles,
   wrapperStyles,
 } from "./styles";
@@ -24,6 +25,7 @@ import {
 interface GameViewProps {
   role: "host" | "client" | null;
   socket: WebSocket;
+  players: Player[];
 }
 
 const initialGameState: GameState = {
@@ -62,7 +64,7 @@ foodImage.src = food;
 const obstable = new Image();
 obstable.src = obstacle;
 
-const GameView: React.FC<GameViewProps> = ({ role, socket }) => {
+const GameView: React.FC<GameViewProps> = ({ role, socket, players }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameState, setGameState] = useState<GameState>(initialGameState);
 
@@ -279,7 +281,7 @@ const GameView: React.FC<GameViewProps> = ({ role, socket }) => {
           ref={canvasRef}
           width={CANVAS_WIDTH}
           height={CANVAS_HEIGHT}
-          style={canvasStyles}
+          style={canvasContainerStyles}
         />
       </div>
     </div>
