@@ -1,6 +1,11 @@
 // src/game/GameTypes.ts
 export type Coordinate = { x: number; y: number };
 
+export interface Food {
+  coordinates: Coordinate;
+  sprite: HTMLImageElement;
+}
+
 export interface Snake {
   id: string;
   segments: Coordinate[];
@@ -11,7 +16,7 @@ export interface Snake {
 
 export interface GameState {
   snakes: Snake[];
-  food: Coordinate[];
+  food: Food[];
   obstacles: Coordinate[];
   consumedFood: number;
   gameOver: boolean;

@@ -6,11 +6,13 @@ import {
   GRID_SIZE,
   Coordinate,
   Snake,
+  Food,
 } from "./GameTypes";
 import { generateFood } from "./generateFood";
 import { generateObstacle } from "./generateObstacle";
 import eatSoundFile from "../assets/eat-sound.mp3";
 import deathSoundFile from "../assets/death-sound.mp3";
+import { generateRandomFoodSprite } from "./generateRandomFoodSprite";
 
 export const updateGameState = (
   prevState: GameState,
@@ -96,20 +98,25 @@ export const updateGameState = (
       if (deadSnakeIds.has(snake.id)) {
         const consumed = snake.segments.length - 1;
         const dropCount = Math.floor(consumed / 2);
-        const drops = snake.segments.slice(-dropCount);
+        const drops: Food[] = snake.segments.slice(-dropCount).map((seg) => ({
+          coordinates: seg,
+          sprite: generateRandomFoodSprite(),
+        }));
         newFoodArray = newFoodArray.concat(drops);
         return null; // La serpiente muere
       } else {
         let ateFood = false;
         if (
           newFoodArray.some(
-            (f) => f.x === snake.newHead.x && f.y === snake.newHead.y
+            ({ coordinates: f }) =>
+              f.x === snake.newHead.x && f.y === snake.newHead.y
           )
         ) {
           ateFood = true;
           eatSound.play();
           newFoodArray = newFoodArray.filter(
-            (f) => !(f.x === snake.newHead.x && f.y === snake.newHead.y)
+            ({ coordinates: f }) =>
+              !(f.x === snake.newHead.x && f.y === snake.newHead.y)
           );
           const foodToBeGeneratedQuantity = prevState.snakes.length;
           newFoodArray = [
