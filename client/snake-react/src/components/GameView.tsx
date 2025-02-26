@@ -27,6 +27,7 @@ import {
 } from "./styles";
 import { GameOver } from "./GameOver";
 import { AnimatePresence } from "framer-motion";
+import { generateRandomFoodSprite } from "../game/generateRandomFoodSprite";
 
 interface GameViewProps {
   role: "host" | "client" | null;
@@ -301,7 +302,6 @@ const GameView: React.FC<GameViewProps> = ({
       });
     });
     // Show food
-    // ctx.fillStyle = "red";
     gameState.food.forEach(({ coordinates, sprite }) => {
       ctx.drawImage(
         sprite,
@@ -313,7 +313,6 @@ const GameView: React.FC<GameViewProps> = ({
     });
     // Show obstacles
 
-    // ctx.fillStyle = "gray"; // Color para los obstáculos
     gameState.obstacles.forEach((obstacle) => {
       ctx.drawImage(
         obstable,

@@ -39,5 +39,5 @@ export const controlsStyles: CSSProperties = {
 
 export const canvasStyles: CSSProperties = {
   position: "absolute",
-  backgroundColor: "lightgray",
+  backgroundImage: `url('/background.jpg')`,
 };
