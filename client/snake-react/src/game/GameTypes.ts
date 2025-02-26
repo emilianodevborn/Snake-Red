@@ -12,6 +12,7 @@ export interface Snake {
   direction: Coordinate;
   color: (typeof AVAILABLE_COLORS)[number];
   newHead?: Coordinate;
+  isBot?: boolean;
 }
 
 export interface GameState {
@@ -19,7 +20,8 @@ export interface GameState {
   food: Food[];
   obstacles: Coordinate[];
   consumedFood: number;
-  gameOver: boolean;
+  isGameOver: boolean;
+  isMultiplayer: boolean;
 }
 
 export type Player = {

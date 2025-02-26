@@ -14,11 +14,16 @@ import eatSoundFile from "../assets/eat-sound.mp3";
 import deathSoundFile from "../assets/death-sound.mp3";
 import { generateRandomFoodSprite } from "./generateRandomFoodSprite";
 
-export const updateGameState = (
-  prevState: GameState,
-  difficulty: string
-): GameState => {
-  if (prevState.gameOver) return prevState;
+type UpdateGameStateParams = {
+  prevState: GameState;
+  difficulty: string;
+  role: "host" | "client";
+  localPlayerId: string;
+};
+
+export const updateGameState = (params: UpdateGameStateParams): GameState => {
+  const { prevState, difficulty, role, localPlayerId } = params;
+  if (prevState.isGameOver) return prevState;
 
   const maxX = CANVAS_WIDTH / GRID_SIZE - 1;
   const maxY = CANVAS_HEIGHT / GRID_SIZE - 1;
@@ -55,7 +60,11 @@ export const updateGameState = (
   // Paso 2: self-collision
   snakesWithNewHead.forEach((snake) => {
     const { newHead, segments, id } = snake;
-    if (segments.slice(1).some((seg) => seg.x === newHead.x && seg.y === newHead.y)) {
+    if (
+      segments
+        .slice(1)
+        .some((seg) => seg.x === newHead.x && seg.y === newHead.y)
+    ) {
       console.warn(`Snake ${id} se colisionó consigo misma.`);
       deadSnakeIds.add(id);
       deathSound.play();
@@ -86,7 +95,11 @@ export const updateGameState = (
   // Paso 4: Verificar colisiones con obstáculos
   snakesWithNewHead.forEach((snake) => {
     const { newHead } = snake;
-    if (prevState.obstacles.some(obstacle => obstacle.x === newHead.x && obstacle.y === newHead.y)) {
+    if (
+      prevState.obstacles.some(
+        (obstacle) => obstacle.x === newHead.x && obstacle.y === newHead.y
+      )
+    ) {
       console.warn(`Snake ${snake.id} se chocó con un obstáculo.`);
       deadSnakeIds.add(snake.id);
       deathSound.play();
@@ -145,17 +158,49 @@ export const updateGameState = (
     })
     .filter((snake) => snake !== null) as Snake[];
 
-  // Paso 6:Cuando es game over?
-  /*   let gameOver: boolean = prevState.gameOver;
-  if (!updatedSnakes.some((s) => s.id === "host")) {
-    gameOver = true;
-  } */
+  /**
+   * Paso 6 - Game over logic:
+   *
+   * - In single player mode, if the host dies (*)
+   * - In multiplayer mode, if there is only 1 real player in the board (*)
+   *
+   * (*) - We consider only real players and discard bots by using the
+   * Player property `isBot`.
+   * (*) - For a game to be considered multiplayer there must be at least
+   * 2 non-bot users in the player list at the beggining of the game.
+   */
+
+  /**
+   * If multiplayer was true at some point, we just use it,
+   * else we check the snakes array. This is to avoid a scenario
+   * where multiplayer was true at some point and then it becomes
+   * false because a real player died leaving an inconsistent state.
+   */
+  const isMultiplayer =
+    prevState.isMultiplayer ||
+    prevState.snakes.filter((snake) => !snake.isBot).length > 1;
+
+  const isGameOver =
+    role === "host"
+      ? !updatedSnakes.some((s) => s.id === localPlayerId)
+      : updatedSnakes.filter((s) => !s.isBot).length <= 1;
+
+  // Step 7 - Determine scores
+
+  /**
+   * Score logic:
+   *
+   * - 1 point per food
+   * - 100 points for each alive player when other player dies.
+   * - 50 points for a player that gets crashed by other player.
+   */
 
   return {
     snakes: updatedSnakes,
     food: newFoodArray,
     obstacles: newObstacles,
     consumedFood: newConsumedFood,
-    gameOver: false,
+    isGameOver,
+    isMultiplayer,
   };
 };

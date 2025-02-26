@@ -1,22 +1,23 @@
-import React, { useRef, useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import obstacle from "../assets/obstacle.png";
+import snakeBody from "../assets/snake-body.png";
+import snakeHead from "../assets/snake-head.png";
+import snakeTail from "../assets/snake-tail.png";
+import { updateGameState } from "../game/GameLogic";
 import {
-  GameState,
-  CANVAS_WIDTH,
-  CANVAS_HEIGHT,
-  GRID_SIZE,
   AVAILABLE_COLORS,
-  type Player,
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
   type Coordinate,
   DIFFICULTY_LEVELS,
+  GameState,
+  GRID_SIZE,
+  type Player,
 } from "../game/GameTypes";
 import { generateFood } from "../game/generateFood";
-import { updateGameState } from "../game/GameLogic";
 import { getConstrainedTransform, getMessageText } from "../game/utils";
-import snakeHead from "../assets/snake-head.png";
-import snakeBody from "../assets/snake-body.png";
-import snakeTail from "../assets/snake-tail.png";
-import obstacle from "../assets/obstacle.png";
 
+import { computeBotState, getBotMove, mapActionToDirection } from "./bot";
 import {
   boardStyles,
   canvasContainerStyles,
@@ -24,8 +25,8 @@ import {
   controlsStyles,
   wrapperStyles,
 } from "./styles";
-import { generateRandomFoodSprite } from "../game/generateRandomFoodSprite";
-import {computeBotState, getBotMove, mapActionToDirection} from "./bot";
+import { GameOver } from "./GameOver";
+import { AnimatePresence } from "framer-motion";
 
 interface GameViewProps {
   role: "host" | "client" | null;
@@ -39,7 +40,8 @@ const initialGameState = {
   snakes: [],
   obstacles: [],
   consumedFood: 0,
-  gameOver: false,
+  isGameOver: false,
+  isMultiplayer: false,
 };
 
 const headImage = new Image();
@@ -98,14 +100,19 @@ const GameView: React.FC<GameViewProps> = ({
 
     const updateGame = async () => {
       // 1. Actualiza el estado normal del juego
-      const newState = updateGameState(gameState, difficulty);
+      const newState = updateGameState({
+        prevState: gameState,
+        difficulty,
+        role,
+        localPlayerId,
+      });
 
       // 2. Filtra los bots (suponiendo que players contiene los jugadores con isBot)
       const bots = players.filter((p: any) => p.isBot);
 
       // 3. Para cada serpiente, si es bot, actualiza su dirección de forma asíncrona
       const updatedSnakesPromises = newState.snakes.map(async (snake) => {
-        if (bots.some(bot => bot.id === snake.id)) {
+        if (bots.some((bot) => bot.id === snake.id)) {
           const botState = computeBotState(newState, snake);
           try {
             const action = await getBotMove(botState);
@@ -132,7 +139,7 @@ const GameView: React.FC<GameViewProps> = ({
     };
 
     const interval = setInterval(() => {
-      updateGame()
+      updateGame();
     }, DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS]);
     return () => clearInterval(interval);
   }, [role, socket, gameState, players]);
@@ -316,15 +323,37 @@ const GameView: React.FC<GameViewProps> = ({
         GRID_SIZE
       );
     });
-    if (gameState.gameOver) {
-      ctx.fillStyle = "white";
-      ctx.font = "30px Arial";
-      ctx.fillText("Game Over", CANVAS_WIDTH / 2 - 70, CANVAS_HEIGHT / 2);
-    }
   }, [gameState]);
 
   return (
     <div style={wrapperStyles}>
+      <AnimatePresence>
+        {gameState.isGameOver && (
+          <GameOver
+            onTryAgain={() =>
+              setGameState({
+                ...initialGameState,
+                food: generateFood(2 * players.length),
+                snakes: players.map((player, i) => {
+                  const isHorizontal = Math.random() < 0.5;
+                  const direction = isHorizontal
+                    ? { x: Math.random() < 0.5 ? 1 : -1, y: 0 }
+                    : { x: 0, y: Math.random() < 0.5 ? 1 : -1 };
+
+                  return {
+                    id: player.id,
+                    segments: [{ x: (i + 1) * 2, y: (i + 1) * 2 }],
+                    direction,
+                    color: !!player.colorIndex
+                      ? AVAILABLE_COLORS[player.colorIndex]
+                      : "green",
+                  };
+                }),
+              })
+            }
+          />
+        )}
+      </AnimatePresence>
       <div style={boardStyles}>
         <div style={controlsStyles}>
           <div>Controls</div>
