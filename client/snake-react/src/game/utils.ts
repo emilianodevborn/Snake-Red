@@ -25,12 +25,12 @@ export const getMessageText = (data: any): Promise<string> => {
 
 export function getConstrainedTransform(position: Coordinate) {
   // Calculate the maximum allowed translation
-  const maxTranslateX = CANVAS_WIDTH - 600; // container width
-  const maxTranslateY = CANVAS_HEIGHT - 400; // container height
+  const maxTranslateX = CANVAS_WIDTH - 800; // container width
+  const maxTranslateY = CANVAS_HEIGHT - 600; // container height
 
   // Calculate desired translation
-  const desiredX = -position.x * GRID_SIZE + 300;
-  const desiredY = -position.y * GRID_SIZE + 200;
+  const desiredX = -position.x * GRID_SIZE + 400;
+  const desiredY = -position.y * GRID_SIZE + 300;
 
   // Constrain the translation values
   const constrainedX = Math.min(0, Math.max(-maxTranslateX, desiredX));

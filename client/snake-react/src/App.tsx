@@ -12,7 +12,7 @@ import type { Player } from "./game/GameTypes";
 import { getMessageText } from "./game/utils";
 import backgroundMusic from "./assets/background-sound.mp3";
 import gameMusic from "./assets/game-sound.mp3";
-import {toast, ToastContainer} from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 
 export enum GamePhase {
   START = "start",
@@ -64,16 +64,22 @@ const App: React.FC = () => {
           const data = JSON.parse(text);
           if (data.type === "roomCreated") {
             setClientId(data.playerId);
-            setPlayers([{ id: data.playerId, name: data.name, colorIndex: data.colorIndex }]);
+            setPlayers([
+              {
+                id: data.playerId,
+                name: data.name,
+                colorIndex: data.colorIndex,
+              },
+            ]);
           }
 
           if (data.type === "playerList") {
-            console.log(data.disconnected)
-            if(data.showToast){
+            console.log(data.disconnected);
+            if (data.showToast) {
               if (data.disconnected) {
-                toast.warn(`${data.newPlayerName} has left the room!`)
+                toast.warn(`${data.newPlayerName} has left the room!`);
               } else {
-                toast.info(`${data.newPlayerName} has joined the room!`)
+                toast.info(`${data.newPlayerName} has joined the room!`);
               }
             }
             setPlayers(data.players);
@@ -99,7 +105,7 @@ const App: React.FC = () => {
       audio.pause();
       setAudio(new Audio(backgroundMusic));
     } else if (phase === GamePhase.GAME) {
-      toast.dismiss()
+      toast.dismiss();
       audio.pause();
       setAudio(new Audio(gameMusic));
     }

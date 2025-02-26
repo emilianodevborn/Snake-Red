@@ -15,8 +15,8 @@ export const canvasContainerStyles: CSSProperties = {
   border: "1px solid white",
   borderRadius: "6px",
   overflow: "hidden",
-  width: "600px",
-  height: "400px",
+  width: "800px",
+  height: "600px",
   position: "relative",
 };
 

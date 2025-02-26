@@ -24,6 +24,7 @@ type UpdateGameStateParams = {
 export const updateGameState = (params: UpdateGameStateParams): GameState => {
   const { prevState, difficulty, role, localPlayerId } = params;
   if (prevState.isGameOver) return prevState;
+  let updatedScores = prevState.scores;
 
   const maxX = CANVAS_WIDTH / GRID_SIZE - 1;
   const maxY = CANVAS_HEIGHT / GRID_SIZE - 1;
@@ -52,7 +53,6 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
       newHead.y < 0 ||
       newHead.y >= maxY
     ) {
-      console.warn(`Snake ${id} colisionó con la pared.`);
       deadSnakeIds.add(id);
     }
   });
@@ -65,7 +65,6 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
         .slice(1)
         .some((seg) => seg.x === newHead.x && seg.y === newHead.y)
     ) {
-      console.warn(`Snake ${id} se colisionó consigo misma.`);
       deadSnakeIds.add(id);
       deathSound.play();
     }
@@ -85,6 +84,13 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
             deadSnakeIds.add(snakeB.id);
           } else {
             deadSnakeIds.add(snakeA.id);
+            // Add 50 points to the other player
+            updatedScores = prevState.scores.map((p) => {
+              if (p.id === snakeB.id) {
+                return { ...p, score: p.score + 50 };
+              }
+              return p;
+            });
           }
           deathSound.play();
         }
@@ -100,7 +106,6 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
         (obstacle) => obstacle.x === newHead.x && obstacle.y === newHead.y
       )
     ) {
-      console.warn(`Snake ${snake.id} se chocó con un obstáculo.`);
       deadSnakeIds.add(snake.id);
       deathSound.play();
     }
@@ -131,6 +136,13 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
           )
         ) {
           ateFood = true;
+          // Add 1 point per food
+          updatedScores = prevState.scores.map((p) => {
+            if (p.id === snake.id) {
+              return { ...p, score: p.score + 1 };
+            }
+            return p;
+          });
           eatSound.play();
           newFoodArray = newFoodArray.filter(
             ({ coordinates: f }) =>
@@ -148,7 +160,6 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
         if (ateFood && newConsumedFood % parsedDifficulty === 0) {
           const obstacle = generateObstacle();
           newObstacles.push(obstacle);
-          console.log("Generado obstáculo en:", obstacle);
         }
         const newSegments = ateFood
           ? [snake.newHead, ...snake.segments]
@@ -190,10 +201,24 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
   /**
    * Score logic:
    *
-   * - 1 point per food
+   * - 1 point per food.
    * - 100 points for each alive player when other player dies.
    * - 50 points for a player that gets crashed by other player.
    */
+
+  /**
+   * Add 100 points to non-bot players if other player dies.
+   */
+
+  if (deadSnakeIds.size > 0) {
+    updatedScores = prevState.scores.map((p) => {
+      if (!deadSnakeIds.has(p.id) && updatedSnakes.some((s) => s.id === p.id)) {
+        return { ...p, score: p.score + 100 };
+      }
+
+      return p;
+    });
+  }
 
   return {
     snakes: updatedSnakes,
@@ -202,5 +227,6 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
     consumedFood: newConsumedFood,
     isGameOver,
     isMultiplayer,
+    scores: updatedScores,
   };
 };
