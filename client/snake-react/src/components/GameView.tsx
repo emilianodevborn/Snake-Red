@@ -27,7 +27,7 @@ import {
 } from "./styles";
 import { GameOver } from "./GameOver";
 import { AnimatePresence } from "framer-motion";
-import GameControls from "./GameControls";
+import debounce from "lodash.debounce";
 
 interface GameViewProps {
   role: "host" | "client" | null;
@@ -72,7 +72,12 @@ const GameView: React.FC<GameViewProps> = ({
     snakes: players.map((player, i) => {
       return {
         id: player.id,
-        segments: [{ x: 10 * (i + 1), y: 10 }],
+        segments: [
+          ...Array.from({ length: 3 }, (_, innerIndex) => ({
+            x: 10 * (i + 1),
+            y: 10 + innerIndex,
+          })),
+        ],
         direction: { x: 0, y: i % 2 ? 1 : -1 },
         color: !!player.colorIndex
           ? AVAILABLE_COLORS[player.colorIndex]
@@ -109,8 +114,8 @@ const GameView: React.FC<GameViewProps> = ({
 
       // 3. Para cada serpiente, si es bot, actualiza su dirección de forma asíncrona
       const updatedSnakesPromises = newState.snakes.map(async (snake) => {
-        if (bots.some(bot => bot.id === snake.id)) {
-          const bot = bots.find(bot => bot.id === snake.id)
+        if (bots.some((bot) => bot.id === snake.id)) {
+          const bot = bots.find((bot) => bot.id === snake.id);
           const botState = computeBotState(newState, snake);
           try {
             const action = await getBotMove(botState, bot?.botDifficulty);
@@ -231,8 +236,10 @@ const GameView: React.FC<GameViewProps> = ({
       });
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    const debouncedHandleKeyDown = debounce(handleKeyDown, 50);
+
+    window.addEventListener("keydown", debouncedHandleKeyDown);
+    return () => window.removeEventListener("keydown", debouncedHandleKeyDown);
   }, [role]);
 
   // Manejo de teclado para el cliente
@@ -270,8 +277,11 @@ const GameView: React.FC<GameViewProps> = ({
         socket.send(JSON.stringify(message));
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    const debouncedHandleKeyDown = debounce(handleKeyDown, 50);
+
+    window.addEventListener("keydown", debouncedHandleKeyDown);
+    return () => window.removeEventListener("keydown", debouncedHandleKeyDown);
   }, [role, socket]);
 
   // Dibujo del canvas
@@ -327,7 +337,7 @@ const GameView: React.FC<GameViewProps> = ({
   return (
     <div style={wrapperStyles}>
       <AnimatePresence>
-        {gameState.isGameOver && (
+        {gameState.isGameOver && !gameState.isMultiplayer && (
           <GameOver
             onTryAgain={() =>
               setGameState({
@@ -346,7 +356,12 @@ const GameView: React.FC<GameViewProps> = ({
 
                   return {
                     id: player.id,
-                    segments: [{ x: (i + 1) * 2, y: (i + 1) * 2 }],
+                    segments: [
+                      ...Array.from({ length: 3 }, (_, innerIndex) => ({
+                        x: 10 * (i + 1),
+                        y: 10 + innerIndex,
+                      })),
+                    ],
                     direction,
                     color: !!player.colorIndex
                       ? AVAILABLE_COLORS[player.colorIndex]
