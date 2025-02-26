@@ -28,6 +28,8 @@ import {
 import { GameOver } from "./GameOver";
 import { AnimatePresence } from "framer-motion";
 import debounce from "lodash.debounce";
+import GameControls from "./GameControls";
+import Modal from "./Modal";
 
 interface GameViewProps {
   role: "host" | "client" | null;
@@ -65,6 +67,11 @@ const GameView: React.FC<GameViewProps> = ({
   difficulty,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+
+  const hasHumanPlayers = players.filter(p => !p.isBot && p.id !== localPlayerId).length > 0;
+
   const [gameState, setGameState] = useState<GameState>({
     ...initialGameState,
     food: generateFood(2 * players.length),
@@ -98,7 +105,7 @@ const GameView: React.FC<GameViewProps> = ({
 
   // Para el host: enviar actualizaciones periódicas del estado
   useEffect(() => {
-    if (role !== "host") return;
+    if (role !== "host" || isPaused) return;
 
     const updateGame = async () => {
       // 1. Actualiza el estado normal del juego
@@ -145,7 +152,7 @@ const GameView: React.FC<GameViewProps> = ({
       updateGame();
     }, DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS]);
     return () => clearInterval(interval);
-  }, [role, socket, gameState, players]);
+  }, [role, socket, gameState, players, isPaused]);
 
   // Para el cliente: recibir actualizaciones del estado
   useEffect(() => {
@@ -197,6 +204,16 @@ const GameView: React.FC<GameViewProps> = ({
     if (role !== "host") return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Manejo de la pausa con la barra espaciadora
+      if (e.code === 'Space' && !hasHumanPlayers) {
+        e.preventDefault(); // Prevenir scroll
+        setIsPaused(prev => !prev);
+        return;
+      }
+
+      // Si el juego está pausado, no procesar otros inputs
+      if (isPaused) return;
+
       setGameState((prevState) => {
         const updatedSnakes = prevState.snakes.map((snake) => {
           if (snake.id !== localPlayerId) {
@@ -246,6 +263,9 @@ const GameView: React.FC<GameViewProps> = ({
   useEffect(() => {
     if (role !== "client") return;
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Si el juego está pausado, no procesar inputs
+      if (isPaused) return;
+
       let newDir = null;
       switch (e.key) {
         case "ArrowUp":
@@ -375,14 +395,27 @@ const GameView: React.FC<GameViewProps> = ({
       </AnimatePresence>
       <div style={boardStyles}>
         <div className="flex flex-col justify-between">
-          <div style={controlsStyles}>
-            {gameState.scores
-              .sort((a, b) => b.score - a.score)
-              .map((score) => (
-                <b key={score.id}>
-                  {score.name} - {score.score}
-                </b>
-              ))}
+          <div className="flex justify-between items-center" style={controlsStyles}>
+            <div>
+              {gameState.scores
+                .sort((a, b) => b.score - a.score)
+                .map((score) => (
+                  <b key={score.id}>
+                    {score.name} - {score.score}
+                  </b>
+                ))}
+            </div>
+            <button
+              onClick={() => {
+                if (!hasHumanPlayers) {
+                  setIsPaused(true);
+                }
+                setShowControls(true);
+              }}
+              className="bg-white px-4 py-2 rounded-lg border border-black hover:bg-gray-100 transition-all duration-200"
+            >
+              🎮 Controls
+            </button>
           </div>
         </div>
         <div style={canvasContainerStyles}>
@@ -392,14 +425,38 @@ const GameView: React.FC<GameViewProps> = ({
             height={CANVAS_HEIGHT}
             style={{
               ...canvasStyles,
+              opacity: isPaused ? 0.5 : 1,
               transform: (() => {
                 const transform = getConstrainedTransform(snakePosition);
                 return `translate(${transform.x}px, ${transform.y}px)`;
               })(),
             }}
           />
+          {isPaused && !hasHumanPlayers && (
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              color: 'white',
+              padding: '20px',
+              borderRadius: '10px',
+              zIndex: 1000,
+              fontSize: '24px',
+              fontWeight: 'bold'
+            }}>
+              PAUSED
+            </div>
+          )}
         </div>
       </div>
+      <Modal isOpen={showControls} onClose={() => {
+        setShowControls(false);
+        setIsPaused(false);
+      }}>
+        <GameControls />
+      </Modal>
     </div>
   );
 };

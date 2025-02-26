@@ -122,14 +122,6 @@ const App: React.FC = () => {
         >
           {isAudioPlaying ? "🔇 Turn Off Sound" : "🔊 Play Sound"}
         </button>
-        {phase === GamePhase.GAME && (
-          <button
-            className="bg-white px-4 py-2 rounded-lg border border-black hover:bg-gray-100 transition-all duration-200"
-            onClick={() => setShowControls(true)}
-          >
-            🎮 Game Controls
-          </button>
-        )}
       </div>
 
       <Modal isOpen={showControls} onClose={() => setShowControls(false)}>
