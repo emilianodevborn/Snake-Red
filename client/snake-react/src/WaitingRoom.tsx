@@ -110,9 +110,55 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
             color: "#000",
             flexDirection: "row",
             display: "flex",
+            alignItems: "center",
+            gap: "5px"
           }}
         >
-          Room ID:<div style={{ color: "green" }}>{roomId}</div>
+          Room ID:
+          <div style={{ color: "green" }}>{roomId}</div>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(roomId);
+              const button = document.activeElement as HTMLButtonElement;
+              const originalText = button.textContent;
+              button.textContent = "Copied!";
+              button.style.backgroundColor = "#4CAF50";
+              button.style.color = "white";
+              
+              setTimeout(() => {
+                button.textContent = originalText;
+                button.style.backgroundColor = "white";
+                button.style.color = "black";
+              }, 1000);
+            }}
+            style={{
+              backgroundColor: "white",
+              border: "1px solid black",
+              borderRadius: "5px",
+              padding: "2px 8px",
+              cursor: "pointer",
+              fontSize: "12px",
+              display: "flex",
+              alignItems: "center",
+              marginLeft: "5px",
+              transition: "all 0.2s ease",
+              transform: "scale(1)",
+            }}
+            onMouseDown={(e) => {
+              const button = e.currentTarget;
+              button.style.transform = "scale(0.95)";
+            }}
+            onMouseUp={(e) => {
+              const button = e.currentTarget;
+              button.style.transform = "scale(1)";
+            }}
+            onMouseLeave={(e) => {
+              const button = e.currentTarget;
+              button.style.transform = "scale(1)";
+            }}
+          >
+            Copy
+          </button>
         </div>
       )}
       <div
