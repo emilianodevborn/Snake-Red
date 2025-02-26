@@ -1,13 +1,14 @@
 // src/App.tsx
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import StartScreen from "./StartScreen";
 import WaitingRoom from "./WaitingRoom";
 import LoadingView from "./LoadingView";
 import GameView from "./components/GameView";
 import Modal from "./components/Modal";
+import GameControls from "./components/GameControls";
 import useCreateRoom from "./hooks/useCreateRoom";
 import useJoinRoom from "./hooks/useJoinRoom";
-import { Player } from "./game/GameTypes";
+import type { Player } from "./game/GameTypes";
 import { getMessageText } from "./game/utils";
 import backgroundMusic from "./assets/background-sound.mp3";
 import gameMusic from "./assets/game-sound.mp3";
@@ -22,17 +23,17 @@ export enum GamePhase {
 const App: React.FC = () => {
   const [phase, setPhase] = useState<GamePhase>(GamePhase.START);
   const [role, setRole] = useState<"host" | "client" | null>(null);
-  const [localPlayerId, setLocalPlayerId] = useState<string>("");
-  const [socket, setSocket] = useState<WebSocket | null>(null);
   const [name, setName] = useState<string>("");
+  const [clientId, setClientId] = useState("");
+  const [socket, setSocket] = useState<WebSocket | null>(null);
   const [difficulty, setDifficulty] = useState<string>("1");
   const { isJoined, createRoom } = useCreateRoom(socket, name);
-  const [clientId, setClientId] = useState("");
   const { joinRoom } = useJoinRoom(socket, name, clientId);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [showControls, setShowControls] = useState(false);
 
   const [audio, setAudio] = useState(new Audio());
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   const toggleBackgroundSound = () => {
     if (isAudioPlaying) {
@@ -61,7 +62,7 @@ const App: React.FC = () => {
         .then((text) => {
           const data = JSON.parse(text);
           if (data.type === "roomCreated") {
-            setLocalPlayerId(data.playerId);
+            setClientId(data.playerId);
             setPlayers([{ id: data.playerId, name: data.name, colorIndex: data.colorIndex }]);
           }
 
@@ -70,7 +71,7 @@ const App: React.FC = () => {
           }
 
           if (data.type === "playerConnected") {
-            setLocalPlayerId(data.playerId);
+            setClientId(data.playerId);
           }
         })
         .catch((err) => {
@@ -96,12 +97,27 @@ const App: React.FC = () => {
 
   return (
     <div>
-      <button
-        className="absolute right-2 top-2"
-        onClick={toggleBackgroundSound}
-      >
-        {isAudioPlaying ? "🔇 Turn Off Sound" : "🔊 Play Sound"}
-      </button>
+      <div className="absolute right-2 top-2 flex flex-col gap-2">
+        <button
+          className="bg-white px-4 py-2 rounded-lg border border-black hover:bg-gray-100 transition-all duration-200"
+          onClick={toggleBackgroundSound}
+        >
+          {isAudioPlaying ? "🔇 Turn Off Sound" : "🔊 Play Sound"}
+        </button>
+        {phase === GamePhase.GAME && (
+          <button
+            className="bg-white px-4 py-2 rounded-lg border border-black hover:bg-gray-100 transition-all duration-200"
+            onClick={() => setShowControls(true)}
+          >
+            🎮 Game Controls
+          </button>
+        )}
+      </div>
+
+      <Modal isOpen={showControls} onClose={() => setShowControls(false)}>
+        <GameControls />
+      </Modal>
+
       {phase === GamePhase.START && (
         <StartScreen
           setName={setName}
@@ -131,7 +147,7 @@ const App: React.FC = () => {
             isHost={role === "host"}
             socket={socket}
             players={players}
-            localPlayerId={localPlayerId}
+            localPlayerId={clientId}
             onDifficultyChange={setDifficulty}
           />
         )}
@@ -154,7 +170,7 @@ const App: React.FC = () => {
           role={role}
           socket={socket}
           players={players}
-          localPlayerId={localPlayerId}
+          localPlayerId={clientId}
           difficulty={difficulty}
         />
       )}
