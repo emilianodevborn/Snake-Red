@@ -4,6 +4,7 @@ import { BOT_NAMES, Player } from "./game/GameTypes";
 import { AVAILABLE_COLORS } from "./game/GameTypes";
 import { assignBotName } from "./game/utils";
 import { toast } from "react-toastify";
+import ColorPicker from "./components/ColorPicker";
 
 interface WaitingRoomProps {
   onStartGame: () => void;
@@ -90,25 +91,8 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
   };
 
   return (
-    <div
-      style={{
-        justifyContent: "center",
-        alignItems: "center",
-        display: "flex",
-        width: "100%",
-        height: "100%",
-        flexDirection: "column",
-        gap: "15px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "20px",
-          fontWeight: "bold",
-          color: "red",
-          textTransform: "uppercase",
-        }}
-      >
+    <div className="flex flex-col items-center justify-center w-full min-w-[400px] h-full gap-4">
+      <div className="text-2xl font-bold text-purple-800 max-w-[95%]">
         Waiting for other players...
       </div>
       {roomId && (
@@ -170,150 +154,90 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
           </button>
         </div>
       )}
-      <div
-        style={{
-          fontSize: "14px",
-          fontWeight: "bold",
-          color: "black",
-          flexDirection: "column",
-          display: "flex",
-          backgroundColor: "rgba(0, 0, 0, 0.3)",
-          width: "100%",
-          justifyContent: "center",
-          padding: "10px",
-          gap: "10px",
-          borderRadius: "10px",
-        }}
-      >
+      <div className="text-sm font-bold text-black flex flex-col items-center justify-center w-full gap-4">
         Players:
         {players.map((player) => (
           <div
             key={player.id}
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              width: "100%",
-              padding: "10px",
-              position: "relative",
-            }}
+            className="flex justify-between items-center w-full p-3 relative"
           >
             <div
-              style={{
-                fontSize: "20px",
-                fontWeight: "bold",
-                color: AVAILABLE_COLORS[player.colorIndex || 0],
-              }}
+              className={`text-lg font-bold color-[${
+                AVAILABLE_COLORS[player.colorIndex || 0]
+              }]`}
+              style={{ color: AVAILABLE_COLORS[player.colorIndex || 0] }}
             >
               {player.name}
             </div>
-            <div style={{ position: "relative" }}>
-              <div
+            <ColorPicker
+              color={AVAILABLE_COLORS[player.colorIndex || 0]}
+              className={
+                player.id === localPlayerId
+                  ? "cursor-pointer"
+                  : "cursor-not-allowed"
+              }
+              onClick={() =>
+                player.id === localPlayerId &&
+                setOpenColorPicker(!openColorPicker)
+              }
+            />
+            {/* <div
                 style={{
-                  backgroundColor: AVAILABLE_COLORS[player.colorIndex || 0],
-                  width: "15px",
-                  height: "15px",
-                  borderRadius: "50%",
+                  // backgroundColor: AVAILABLE_COLORS[player.colorIndex || 0],
                   cursor:
                     player.id === localPlayerId ? "pointer" : "not-allowed",
-                  border: "1px solid black",
                 }}
+                className={`w-4 h-4 rounded-full opacity-75 ${
+                  player.id === localPlayerId ? "animate-spin" : ""
+                }`}
                 onClick={() =>
                   player.id === localPlayerId &&
                   setOpenColorPicker(!openColorPicker)
                 }
-              />
-              {openColorPicker && player.id === localPlayerId && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "20px",
-                    right: "0",
-                    backgroundColor: "white",
-                    padding: "5px",
-                    borderRadius: "5px",
-                    border: "1px solid black",
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "5px",
-                    width: "100px",
-                    zIndex: 1000,
-                    justifyContent: "center",
-                  }}
-                >
-                  {AVAILABLE_COLORS.map((color, index) => {
-                    const isAlreadyUsed = players.some(
-                      (p) => p.colorIndex === index
-                    );
-                    const isPlayerColor = player.colorIndex === index;
-                    const isDisabled = isAlreadyUsed && !isPlayerColor;
+              /> */}
+            {openColorPicker && player.id === localPlayerId && (
+              <div className="absolute top-5 right-0 bg-white p-2 rounded-lg border border-black flex flex-wrap gap-2 w-full z-[1000] justify-center">
+                {AVAILABLE_COLORS.map((color, index) => {
+                  const isAlreadyUsed = players.some(
+                    (p) => p.colorIndex === index
+                  );
+                  const isPlayerColor = player.colorIndex === index;
+                  const isDisabled = isAlreadyUsed && !isPlayerColor;
 
-                    return (
+                  return (
+                    <div
+                      key={color}
+                      className="relative size-5 flex items-center justify-center"
+                    >
                       <div
-                        key={color}
+                        className={`size-4 rounded-full border border-black ${
+                          isDisabled ? "cursor-not-allowed" : "cursor-pointer"
+                        } ${isDisabled ? "opacity-50" : "opacity-100"}`}
                         style={{
-                          position: "relative",
-                          width: "20px",
-                          height: "20px",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
+                          backgroundColor: color,
                         }}
-                      >
+                        onClick={() =>
+                          !isDisabled && handleColorSelect(player.id, index)
+                        }
+                      />
+                      {isDisabled && (
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-500 text-xs font-bold pointer-events-none">
+                          ✕
+                        </div>
+                      )}
+                      {isPlayerColor && (
                         <div
-                          style={{
-                            backgroundColor: color,
-                            width: "15px",
-                            height: "15px",
-                            borderRadius: "50%",
-                            cursor: isDisabled ? "not-allowed" : "pointer",
-                            border: "1px solid black",
-                            opacity: isDisabled ? 0.5 : 1,
-                          }}
-                          onClick={() =>
-                            !isDisabled && handleColorSelect(player.id, index)
-                          }
-                        />
-                        {isDisabled && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: "50%",
-                              left: "50%",
-                              transform: "translate(-50%, -50%)",
-                              color: "red",
-                              fontSize: "14px",
-                              fontWeight: "bold",
-                              pointerEvents: "none",
-                            }}
-                          >
-                            ✕
-                          </div>
-                        )}
-                        {isPlayerColor && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: "50%",
-                              left: "50%",
-                              transform: "translate(-50%, -50%)",
-                              color: "white",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              pointerEvents: "none",
-                              textShadow: "0px 0px 2px black",
-                            }}
-                          >
-                            ✓
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                          className="absolute top-1/2 left-1/2 transform translate-x-[-50%] translate-y-[-50%] text-white text-xs font-bold pointer-events-none"
+                          style={{ textShadow: "0px 0px 2px black" }}
+                        >
+                          ✓
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ))}
       </div>

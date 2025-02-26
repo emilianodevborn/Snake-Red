@@ -298,18 +298,21 @@ const GameView: React.FC<GameViewProps> = ({
         );
       });
     });
+
     // Show food
     gameState.food.forEach(({ coordinates, sprite }) => {
+      const image = new Image();
+      image.src = sprite;
       ctx.drawImage(
-        sprite,
+        image,
         coordinates.x * GRID_SIZE,
         coordinates.y * GRID_SIZE,
         GRID_SIZE,
         GRID_SIZE
       );
     });
-    // Show obstacles
 
+    // Show obstacles
     gameState.obstacles.forEach((obstacle) => {
       ctx.drawImage(
         obstable,
