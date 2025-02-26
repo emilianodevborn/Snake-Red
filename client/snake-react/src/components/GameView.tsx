@@ -112,10 +112,12 @@ const GameView: React.FC<GameViewProps> = ({
 
       // 3. Para cada serpiente, si es bot, actualiza su dirección de forma asíncrona
       const updatedSnakesPromises = newState.snakes.map(async (snake) => {
-        if (bots.some((bot) => bot.id === snake.id)) {
+        if (bots.some(bot => bot.id === snake.id)) {
+          const bot = bots.find(bot => bot.id === snake.id)
           const botState = computeBotState(newState, snake);
           try {
-            const action = await getBotMove(botState);
+            const action = await getBotMove(botState, bot?.botDifficulty);
+            console.log('ACTION ', action);
             const newDirection = mapActionToDirection(snake.direction, action);
             return { ...snake, direction: newDirection };
           } catch (err) {

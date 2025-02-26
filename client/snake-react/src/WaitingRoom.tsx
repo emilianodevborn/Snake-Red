@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import GameButtons from "./components/GameButtons";
-import type { Player } from "./game/GameTypes";
+import {BOT_NAMES, Player} from "./game/GameTypes";
 import { AVAILABLE_COLORS } from "./game/GameTypes";
+import {assignBotName} from "./game/utils";
+import {toast} from "react-toastify";
 
 interface WaitingRoomProps {
   onStartGame: () => void;
@@ -22,6 +24,8 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
 }) => {
   const [roomId, setRoomId] = useState<string>("");
   const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
+  const [botDifficulty, setBotDifficulty] = useState<string>('easy');
+  const bots = players.filter((p: any) => p.isBot);
 
   useEffect(() => {
     if (!socket) return;
@@ -72,11 +76,17 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
 
   const addBot = () => {
     if (socket && isHost) {
-      const addBotMessage = {
-        type: 'addBot',
-        botName: 'SuperBot'
-      };
-      socket.send(JSON.stringify(addBotMessage));
+      if (bots.length < 4){
+        const addBotMessage = {
+          type: 'addBot',
+          botName: assignBotName(bots, botDifficulty),
+          botDifficulty: botDifficulty,
+        };
+        socket.send(JSON.stringify(addBotMessage));
+      } else {
+        toast.warn('You can only add 4 bots')
+      }
+
     }
   }
 
@@ -309,23 +319,33 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
         ))}
       </div>
       {isHost && (
-        <fieldset style={{ width: "100%", border: 0 }}>
-          <legend>Choose the difficulty</legend>
-          <select
-            style={{ width: "100%", padding: "6px", marginTop: "6px" }}
-            onChange={(e) => onDifficultyChange(e.target.value)}
-            defaultValue="2"
-          >
-            <option value="1">Let's take it easy</option>
-            <option value="2">I'm ready for a challenge</option>
-            <option value="3">Bring it on!</option>
-          </select>
-        </fieldset>
-      )}
-      {isHost && (
         <>
-          <GameButtons onClick={startGame} text="Iniciar Juego"/>
+          <fieldset style={{width: "100%", border: 0}}>
+            <legend>Choose the difficulty</legend>
+            <select
+              style={{width: "100%", padding: "6px", marginTop: "6px"}}
+              onChange={(e) => onDifficultyChange(e.target.value)}
+              defaultValue="2"
+            >
+              <option value="1">Let's take it easy</option>
+              <option value="2">I'm ready for a challenge</option>
+              <option value="3">Bring it on!</option>
+            </select>
+          </fieldset>
+          <fieldset style={{width: "100%", border: 0}}>
+            <legend>Choose BOT difficulty</legend>
+            <select
+              style={{width: "100%", padding: "6px", marginTop: "6px"}}
+              onChange={(e) => setBotDifficulty(e.target.value)}
+              defaultValue="easy"
+            >
+              <option value="easy">Easy</option>
+              <option value="hard">Hard</option>
+            </select>
+          </fieldset>
+
           <GameButtons onClick={addBot} text="Add bot"/>
+          <GameButtons onClick={startGame} text="Iniciar Juego"/>
         </>
       )}
     </div>

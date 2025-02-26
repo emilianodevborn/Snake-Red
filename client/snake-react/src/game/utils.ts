@@ -2,7 +2,7 @@ import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   GRID_SIZE,
-  type Coordinate,
+  type Coordinate, BOT_NAMES,
 } from "./GameTypes";
 
 // src/game/utils.ts
@@ -37,4 +37,13 @@ export function getConstrainedTransform(position: Coordinate) {
   const constrainedY = Math.min(0, Math.max(-maxTranslateY, desiredY));
 
   return { x: constrainedX, y: constrainedY };
+}
+
+export const assignBotName = (bots: any[], botDifficulty: string) => {
+  const usedNames = bots?.map(bot => bot.name.split(" ")[0]);
+  const unusedNames = BOT_NAMES.filter(name => !usedNames.includes(name));
+  if (unusedNames.length === 0) {
+    return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+  }
+  return `${unusedNames[0]} (${botDifficulty})`;
 }

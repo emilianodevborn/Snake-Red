@@ -100,18 +100,34 @@ wss.on("connection", (ws) => {
         ws.send(
           JSON.stringify({
               type: "playerConnected",
+              playerName: ws.playerName,
               playerId: ws.playerId,
           })
         );
         // Enviamos lista de jugadores actualizada a la sala
-        broadcastPlayerList(roomId);
+        broadcastPlayerList(roomId, data.name);
         break;
       
       case "addBot":
         // Verifica que el emisor sea el host
         if (ws.isHost && ws.roomId && rooms[ws.roomId]) {
           const room = rooms[ws.roomId];
-          
+          // Buscar el primer índice disponible
+          let availableIndex = null;
+          for (let i = 0; i < MAX_PLAYERS; i++) {
+            if (!room.usedColorIndices.includes(i)) {
+              availableIndex = i;
+              break;
+            }
+          }
+          if (availableIndex === null) {
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: 'Límite de jugadores alcanzado (no hay colores disponibles)'
+            }));
+            return;
+          }
+          room.usedColorIndices.push(availableIndex);
           // Crea un objeto "falso" con forma de WebSocket
           // para representarlo en la lista de jugadores
           const botWS = {
@@ -120,6 +136,8 @@ wss.on("connection", (ws) => {
             playerId: uuidv4(),         // ID único para el bot
             playerName: data.botName || 'Bot',
             isBot: true,
+            botDifficulty: data.botDifficulty || 'easy',
+            playerColorIndex: availableIndex,
             readyState: WebSocket.OPEN, // Para simular que está "conectado"
             // Definimos una función send vacía, o un simple console.log
             send: (msg) => {
@@ -133,7 +151,7 @@ wss.on("connection", (ws) => {
           console.log(`Bot agregado: ${botWS.playerName} (ID: ${botWS.playerId}) en sala ${ws.roomId}`);
           
           // Reenviamos la lista de jugadores actualizada
-          broadcastPlayerList(ws.roomId);
+          broadcastPlayerList(ws.roomId, botWS.playerName, false);
         }
         break;
 
@@ -207,7 +225,7 @@ wss.on("connection", (ws) => {
         rooms[ws.roomId].clients = rooms[ws.roomId].clients.filter(
           (c) => c !== ws
         );
-        broadcastPlayerList(ws.roomId);
+        broadcastPlayerList(ws.roomId, ws.playerName, true);
       }
     }
   });
@@ -216,7 +234,7 @@ wss.on("connection", (ws) => {
 // Funciones Auxiliares
 
 // Envía la lista de jugadores (con ID y nombre) a la sala
-function broadcastPlayerList(roomId) {
+function broadcastPlayerList(roomId, newPlayerName, disconnected = false) {
   const room = rooms[roomId];
   if (!room) return;
   
@@ -242,7 +260,10 @@ function broadcastPlayerList(roomId) {
   const msg = JSON.stringify({
     type: "playerList",
     players,
-    roomId: roomId
+    roomId: roomId,
+    newPlayerName: newPlayerName || '',
+    disconnected: disconnected,
+    showToast: !!newPlayerName
   });
   
   if (room.host && room.host.readyState === WebSocket.OPEN) {

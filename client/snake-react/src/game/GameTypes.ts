@@ -28,6 +28,8 @@ export type Player = {
   id: string;
   name: string;
   colorIndex?: number;
+  isBot?: boolean;
+  botDifficulty?: string;
 };
 
 // Constantes del juego
@@ -53,3 +55,6 @@ export const DIFFICULTY_LEVELS = {
   "2": 100,
   "3": 50,
 } as const;
+
+export const BOT_NAMES = ['Bot-tanic', 'MultiLegs-Mike', 'Centi-Bot', 'Leggy-McBot', 'Bot-of-Many-Legs']
+

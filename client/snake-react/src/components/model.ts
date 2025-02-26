@@ -1,9 +1,9 @@
 // src/model.ts
 import * as ort from 'onnxruntime-web';
 
-export async function loadModel(): Promise<ort.InferenceSession> {
-    // Asegúrate de que 'model.onnx' esté en la carpeta public o en una ruta accesible
-    const session = await ort.InferenceSession.create('model.onnx');
+export async function loadModel(difficulty: string): Promise<ort.InferenceSession> {
+    // Asegúrate de que 'model_hard.onnx' esté en la carpeta public o en una ruta accesible
+    const session = await ort.InferenceSession.create(`model_${difficulty}.onnx`);
     console.log("Modelo ONNX cargado");
     return session;
 }

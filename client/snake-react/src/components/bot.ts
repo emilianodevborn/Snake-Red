@@ -3,11 +3,13 @@
 import {loadModel, predict} from './model';
 import {CANVAS_HEIGHT, CANVAS_WIDTH, Coordinate, GameState, GRID_SIZE, Snake} from "../game/GameTypes";
 
-let sessionPromise = loadModel(); // Carga el modelo una sola vez
+let boy_easy = loadModel('easy');
+let boy_hard = loadModel('hard');
 
-export async function getBotAction(state: number[]): Promise<number[]> {
+export async function getBotAction(state: number[], difficulty: string): Promise<number[]> {
     // 'state' debe ser un array de números con las características del juego (ej. 11 elementos)
-    const session = await sessionPromise;
+    const session = await (difficulty === 'easy' ? boy_easy : boy_hard);
+
     const prediction = await predict(session, state);
     // Suponiendo que la acción es el índice con el valor máximo
     const arr = Array.from(prediction);
@@ -64,13 +66,14 @@ export function computeBotState(gameState: any, snake: Snake): number[] {
         foodDir.up ? 1 : 0,
         foodDir.down ? 1 : 0,
     ];
+    console.log('VECTOR', stateVector);
     return stateVector;
 }
 
 // Función para obtener la acción del bot usando el modelo ONNX
-export async function getBotMove(state: any): Promise<number[]> {
+export async function getBotMove(state: any, difficulty: string = 'easy'): Promise<number[]> {
      // getBotAction está definido en model.ts
-    return await getBotAction(state); // Array, por ejemplo, [0, 1, 0]
+    return await getBotAction(state, difficulty); // Array, por ejemplo, [0, 1, 0]
 }
 
 // Aquí deberías definir o importar las funciones isObstacle y getFoodDirection según la lógica de tu juego.
@@ -123,11 +126,14 @@ export function isObstacle(
       nextPoint.y < 0 ||
       nextPoint.y >= CANVAS_HEIGHT/GRID_SIZE
     ) {
+        console.log('LIMITE ',relDir)
         return true;
     }
 
     // Verificar obstáculos fijos
     if (gameState.obstacles.some(obst => obst.x === nextPoint.x && obst.y === nextPoint.y)) {
+        console.log('OBSTACULO')
+
         return true;
     }
 
@@ -135,6 +141,7 @@ export function isObstacle(
     for (const snake of gameState.snakes) {
         for (const seg of snake.segments) {
             if (seg.x === nextPoint.x && seg.y === nextPoint.y) {
+                console.log('Serpiente')
                 return true;
             }
         }
@@ -144,15 +151,30 @@ export function isObstacle(
 }
 
 function getFoodDirection(gameState: any, head: any): { left: boolean, right: boolean, up: boolean, down: boolean } {
-    // Determina la posición de la comida más cercana en relación con la cabeza
-    // Por ejemplo, si la comida está a la izquierda de la cabeza, retorna { left: true, ... }
-    // Puedes implementar una lógica simple basada en la posición de la comida (gameState.food)
-    const food = gameState.food[0]; // Supongamos que hay una sola comida
+    // Supongamos que gameState.food es un array de objetos con una propiedad "coordinates" que tiene x e y.
+    let closestFood = null;
+    let minDistance = Infinity;
+
+    for (const foodObj of gameState.food) {
+        const food = foodObj.coordinates;
+        // Usamos la distancia Manhattan
+        const distance = Math.abs(food.x - head.x) + Math.abs(food.y - head.y);
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestFood = food;
+        }
+    }
+
+    if (!closestFood) {
+        // Si no hay comida, devolvemos falsos
+        return { left: false, right: false, up: false, down: false };
+    }
+
     return {
-        left: food.x < head.x,
-        right: food.x > head.x,
-        up: food.y < head.y,
-        down: food.y > head.y,
+        left: closestFood.x < head.x,
+        right: closestFood.x > head.x,
+        up: closestFood.y < head.y,
+        down: closestFood.y > head.y,
     };
 }
 
