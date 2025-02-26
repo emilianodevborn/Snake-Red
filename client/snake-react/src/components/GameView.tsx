@@ -405,17 +405,17 @@ const GameView: React.FC<GameViewProps> = ({
                   </b>
                 ))}
             </div>
-            {!hasHumanPlayers && (
-              <button
-                onClick={() => {
+            <button
+              onClick={() => {
+                if (!hasHumanPlayers) {
                   setIsPaused(true);
-                  setShowControls(true);
-                }}
-                className="bg-white px-4 py-2 rounded-lg border border-black hover:bg-gray-100 transition-all duration-200"
-              >
-                🎮 Controls
-              </button>
-            )}
+                }
+                setShowControls(true);
+              }}
+              className="bg-white px-4 py-2 rounded-lg border border-black hover:bg-gray-100 transition-all duration-200"
+            >
+              🎮 Controls
+            </button>
           </div>
         </div>
         <div style={canvasContainerStyles}>
