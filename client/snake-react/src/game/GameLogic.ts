@@ -125,7 +125,7 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
           coordinates: seg,
           sprite: generateRandomFoodSprite(),
         }));
-        newFoodArray = newFoodArray.concat(drops);
+        newFoodArray = [...newFoodArray, ...drops];
         return null; // La serpiente muere
       } else {
         let ateFood = false;

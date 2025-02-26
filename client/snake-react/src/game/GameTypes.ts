@@ -3,7 +3,7 @@ export type Coordinate = { x: number; y: number };
 
 export interface Food {
   coordinates: Coordinate;
-  sprite: HTMLImageElement;
+  sprite: string;
 }
 
 export interface Snake {

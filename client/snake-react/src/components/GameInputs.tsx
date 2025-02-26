@@ -3,33 +3,23 @@ type GameInputsProps = {
   value: string;
   placeholder?: string;
   onChange: (value: string) => void;
-}
+};
 
-const GameInputs = ({ label, value, onChange, placeholder }: GameInputsProps) => {
+const GameInputs = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: GameInputsProps) => {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '5px',
-      width: '20%'
-    }}>
-      <div style={{
-        fontSize: '16px',
-        color: '#000',
-        fontWeight: 'bold',
-      }}>{label}</div>
+    <div className="flex flec-col gap-1 w-[20%] justify-between">
+      <div className="text-[#000] font-bold text-2xl">{label}</div>
       <input
         type="text"
-        className="input"
+        className="input rounded-[5px] py-1 px-3 bg-[#F7F6DF] border border-black"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        style={{
-          borderRadius: '5px',
-          border: '1px solid #000',
-          backgroundColor: '#F7F6DF',
-          padding: '5px 10px',
-        }}
       />
     </div>
   );
