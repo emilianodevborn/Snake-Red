@@ -1,5 +1,5 @@
 // src/App.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import StartScreen from "./StartScreen";
 import WaitingRoom from "./WaitingRoom";
 import LoadingView from "./LoadingView";
@@ -28,20 +28,20 @@ const App: React.FC = () => {
   const [clientId, setClientId] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [difficulty, setDifficulty] = useState<string>("1");
-  const { isJoined, createRoom } = useCreateRoom(socket, name);
+  const { createRoom } = useCreateRoom(socket, name);
   const { joinRoom } = useJoinRoom(socket, name, clientId);
   const [players, setPlayers] = useState<Player[]>([]);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [showControls, setShowControls] = useState(false);
 
-  const [audio, setAudio] = useState(new Audio());
+  const audio = useRef(new Audio());
 
   const toggleBackgroundSound = () => {
     if (isAudioPlaying) {
-      audio.pause();
+      audio.current.pause();
     } else {
-      audio.loop = true;
-      audio
+      audio.current.loop = true;
+      audio.current
         .play()
         .catch((error) => console.error("Audio playback failed:", error));
     }
@@ -102,12 +102,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (phase === GamePhase.START) {
-      audio.pause();
-      setAudio(new Audio(backgroundMusic));
+      audio.current.pause();
+      audio.current = new Audio(backgroundMusic);
+      setIsAudioPlaying(false);
     } else if (phase === GamePhase.GAME) {
       toast.dismiss();
-      audio.pause();
-      setAudio(new Audio(gameMusic));
+      audio.current.pause();
+      setIsAudioPlaying(false);
+      audio.current = new Audio(gameMusic);
     }
   }, [phase]);
 
