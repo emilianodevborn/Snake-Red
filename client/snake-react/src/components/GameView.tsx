@@ -22,12 +22,11 @@ import {
   boardStyles,
   canvasContainerStyles,
   canvasStyles,
-  controlsStyles,
   wrapperStyles,
 } from "./styles";
 import { GameOver } from "./GameOver";
 import { AnimatePresence } from "framer-motion";
-import { generateRandomFoodSprite } from "../game/generateRandomFoodSprite";
+import GameControls from "./GameControls";
 
 interface GameViewProps {
   role: "host" | "client" | null;
@@ -354,15 +353,6 @@ const GameView: React.FC<GameViewProps> = ({
         )}
       </AnimatePresence>
       <div style={boardStyles}>
-        <div style={controlsStyles}>
-          <div>Controls</div>
-          <div>
-            <div>Up (W or ArrowUp)</div>
-            <div>Down (S or ArrowDown)</div>
-            <div>Left (A or ArrowLeft)</div>
-            <div>Right (D or ArrowRight)</div>
-          </div>
-        </div>
         <div style={canvasContainerStyles}>
           <canvas
             ref={canvasRef}
