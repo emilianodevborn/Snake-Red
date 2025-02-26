@@ -1,8 +1,7 @@
 // src/StartScreen.tsx
-import React, { useState } from "react";
-
-import GameInputs from "./components/GameInputs";
+import { useState, type FC } from "react";
 import GameButtons from "./components/GameButtons";
+import GameInputs from "./components/GameInputs";
 import Separator from "./components/Separator";
 import Modal from "./components/Modal";
 import GameControls from "./components/GameControls";
@@ -16,7 +15,7 @@ interface StartScreenProps {
   clientId: string;
 }
 
-const StartScreen: React.FC<StartScreenProps> = ({
+const StartScreen: FC<StartScreenProps> = ({
   onSelectClient,
   onSelectHost,
   setName,
@@ -31,7 +30,7 @@ const StartScreen: React.FC<StartScreenProps> = ({
   return (
     <div className="bg-[#F7F6DF] w-screen h-screen flex flex-col justify-center items-center gap-10 text-white">
       <div className="text-6xl font-bold text-black">Snake Multiplayer</div>
-      <div 
+      <div
         className="text-4xl font-bold text-red-500 hover:underline cursor-pointer transition-all duration-200"
         onClick={() => setShowControls(true)}
       >

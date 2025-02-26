@@ -22,6 +22,7 @@ export interface GameState {
   consumedFood: number;
   isGameOver: boolean;
   isMultiplayer: boolean;
+  scores: { id: string; name: string; score: number }[];
 }
 
 export type Player = {
@@ -33,8 +34,8 @@ export type Player = {
 };
 
 // Constantes del juego
-export const CANVAS_WIDTH = 1200;
-export const CANVAS_HEIGHT = 800;
+export const CANVAS_WIDTH = 2000;
+export const CANVAS_HEIGHT = 2000;
 export const GRID_SIZE = 20;
 
 export const AVAILABLE_COLORS = [

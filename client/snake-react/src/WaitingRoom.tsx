@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import GameButtons from "./components/GameButtons";
-import {BOT_NAMES, Player} from "./game/GameTypes";
+import { BOT_NAMES, Player } from "./game/GameTypes";
 import { AVAILABLE_COLORS } from "./game/GameTypes";
-import {assignBotName} from "./game/utils";
-import {toast} from "react-toastify";
+import { assignBotName } from "./game/utils";
+import { toast } from "react-toastify";
 
 interface WaitingRoomProps {
   onStartGame: () => void;
@@ -24,7 +24,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
 }) => {
   const [roomId, setRoomId] = useState<string>("");
   const [openColorPicker, setOpenColorPicker] = useState<boolean>(false);
-  const [botDifficulty, setBotDifficulty] = useState<string>('easy');
+  const [botDifficulty, setBotDifficulty] = useState<string>("easy");
   const bots = players.filter((p: any) => p.isBot);
 
   useEffect(() => {
@@ -76,19 +76,18 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
 
   const addBot = () => {
     if (socket && isHost) {
-      if (bots.length < 4){
+      if (bots.length < 4) {
         const addBotMessage = {
-          type: 'addBot',
+          type: "addBot",
           botName: assignBotName(bots, botDifficulty),
           botDifficulty: botDifficulty,
         };
         socket.send(JSON.stringify(addBotMessage));
       } else {
-        toast.warn('You can only add 4 bots')
+        toast.warn("You can only add 4 bots");
       }
-
     }
-  }
+  };
 
   return (
     <div
@@ -121,7 +120,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
             flexDirection: "row",
             display: "flex",
             alignItems: "center",
-            gap: "5px"
+            gap: "5px",
           }}
         >
           Room ID:
@@ -134,7 +133,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
               button.textContent = "Copied!";
               button.style.backgroundColor = "#4CAF50";
               button.style.color = "white";
-              
+
               setTimeout(() => {
                 button.textContent = originalText;
                 button.style.backgroundColor = "white";
@@ -320,10 +319,10 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
       </div>
       {isHost && (
         <>
-          <fieldset style={{width: "100%", border: 0}}>
+          <fieldset style={{ width: "100%", border: 0 }}>
             <legend>Choose the difficulty</legend>
             <select
-              style={{width: "100%", padding: "6px", marginTop: "6px"}}
+              style={{ width: "100%", padding: "6px", marginTop: "6px" }}
               onChange={(e) => onDifficultyChange(e.target.value)}
               defaultValue="2"
             >
@@ -332,10 +331,10 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
               <option value="3">Bring it on!</option>
             </select>
           </fieldset>
-          <fieldset style={{width: "100%", border: 0}}>
+          <fieldset style={{ width: "100%", border: 0 }}>
             <legend>Choose BOT difficulty</legend>
             <select
-              style={{width: "100%", padding: "6px", marginTop: "6px"}}
+              style={{ width: "100%", padding: "6px", marginTop: "6px" }}
               onChange={(e) => setBotDifficulty(e.target.value)}
               defaultValue="easy"
             >
@@ -344,8 +343,8 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
             </select>
           </fieldset>
 
-          <GameButtons onClick={addBot} text="Add bot"/>
-          <GameButtons onClick={startGame} text="Iniciar Juego"/>
+          <GameButtons onClick={addBot} text="Add bot" />
+          <GameButtons onClick={startGame} text="Start game" />
         </>
       )}
     </div>

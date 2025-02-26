@@ -22,6 +22,7 @@ import {
   boardStyles,
   canvasContainerStyles,
   canvasStyles,
+  controlsStyles,
   wrapperStyles,
 } from "./styles";
 import { GameOver } from "./GameOver";
@@ -67,16 +68,12 @@ const GameView: React.FC<GameViewProps> = ({
   const [gameState, setGameState] = useState<GameState>({
     ...initialGameState,
     food: generateFood(2 * players.length),
+    scores: players.map((p) => ({ id: p.id, name: p.name, score: 0 })),
     snakes: players.map((player, i) => {
-      const isHorizontal = Math.random() < 0.5;
-      const direction = isHorizontal
-        ? { x: Math.random() < 0.5 ? 1 : -1, y: 0 }
-        : { x: 0, y: Math.random() < 0.5 ? 1 : -1 };
-
       return {
         id: player.id,
-        segments: [{ x: (i + 1) * 2, y: (i + 1) * 2 }],
-        direction,
+        segments: [{ x: 10 * (i + 1), y: 10 }],
+        direction: { x: 0, y: i % 2 ? 1 : -1 },
         color: !!player.colorIndex
           ? AVAILABLE_COLORS[player.colorIndex]
           : "green",
@@ -332,6 +329,11 @@ const GameView: React.FC<GameViewProps> = ({
             onTryAgain={() =>
               setGameState({
                 ...initialGameState,
+                scores: players.map((p) => ({
+                  id: p.id,
+                  name: p.name,
+                  score: 0,
+                })),
                 food: generateFood(2 * players.length),
                 snakes: players.map((player, i) => {
                   const isHorizontal = Math.random() < 0.5;
@@ -354,6 +356,17 @@ const GameView: React.FC<GameViewProps> = ({
         )}
       </AnimatePresence>
       <div style={boardStyles}>
+        <div className="flex flex-col justify-between">
+          <div style={controlsStyles}>
+            {gameState.scores
+              .sort((a, b) => b.score - a.score)
+              .map((score) => (
+                <b key={score.id}>
+                  {score.name} - {score.score}
+                </b>
+              ))}
+          </div>
+        </div>
         <div style={canvasContainerStyles}>
           <canvas
             ref={canvasRef}
