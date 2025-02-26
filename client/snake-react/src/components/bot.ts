@@ -66,7 +66,6 @@ export function computeBotState(gameState: any, snake: Snake): number[] {
         foodDir.up ? 1 : 0,
         foodDir.down ? 1 : 0,
     ];
-    console.log('VECTOR', stateVector);
     return stateVector;
 }
 

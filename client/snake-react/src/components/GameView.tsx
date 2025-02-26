@@ -117,7 +117,6 @@ const GameView: React.FC<GameViewProps> = ({
           const botState = computeBotState(newState, snake);
           try {
             const action = await getBotMove(botState, bot?.botDifficulty);
-            console.log('ACTION ', action);
             const newDirection = mapActionToDirection(snake.direction, action);
             return { ...snake, direction: newDirection };
           } catch (err) {
