@@ -97,7 +97,9 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
   return (
     <div className="flex flex-col justify-center items-center  gap-4">
       <img src={Logo} alt="Logo Centibite" />
-      <span className="font-bold text-3xl">Create a new game</span>
+      <span className="font-bold text-3xl">
+        {isHost ? "Create a new game" : "Waiting for others players..."}
+      </span>
       <div className="flex flex-col justify-center items-center gap-4 relative">
         <div className="text-sm font-bold text-black grid grid-cols-4 items-center justify-center w-full gap-4">
           {players.map((player) => (
