@@ -113,6 +113,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
                 {player.name}
               </div> */}
               <PlayerTag
+                key={player.id}
                 name={player.name}
                 color={AVAILABLE_COLORS[player.colorIndex || 0]}
                 className={
@@ -154,7 +155,7 @@ const WaitingRoom: React.FC<WaitingRoomProps> = ({
                         className="relative size-5 flex items-center justify-center"
                       >
                         <div
-                          className={`size-4 rounded-full border border-black ${
+                          className={`size-4 rounded-full border border-black border-solid ${
                             isDisabled ? "cursor-not-allowed" : "cursor-pointer"
                           } ${isDisabled ? "opacity-50" : "opacity-100"}`}
                           style={{

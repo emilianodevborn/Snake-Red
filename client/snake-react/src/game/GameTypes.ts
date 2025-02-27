@@ -49,16 +49,16 @@ export const CANVAS_CONTAINER_HEIGHT = 600;
 export const GRID_SIZE = 20;
 
 export const AVAILABLE_COLORS = [
-  "green",
-  "blue",
-  "red",
-  "yellow",
-  "purple",
-  "orange",
-  "pink",
-  "brown",
-  "gray",
+  "LightPink",
+  "PaleGreen",
+  "SandyBrown",
+  "Tomato",
   "black",
+  "MediumSlateBlue",
+  "White",
+  "DeepPink",
+  "Khaki",
+  "SteelBlue",
 ] as const;
 
 export const DIFFICULTY_LEVELS = {

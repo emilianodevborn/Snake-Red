@@ -19,11 +19,11 @@ const PlayerTag = ({ color, name, onClick, className }: PlayerTagProps) => {
 
       <span className={`relative flex size-4`}>
         <span
-          className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75`}
+          className={`absolute inline-flex h-full w-full animate-ping rounded-full border border-solid border-black opacity-75`}
           style={{ backgroundColor: color }}
         />
         <span
-          className={`relative inline-flex size-4 rounded-full `}
+          className={`relative inline-flex size-4 rounded-full border border-solid border-black `}
           style={{ backgroundColor: color }}
         />
       </span>
