@@ -5,7 +5,6 @@ import WaitingRoom from "./WaitingRoom";
 import LoadingView from "./LoadingView";
 import GameView from "./components/GameView";
 import Modal from "./components/Modal";
-import GameControls from "./components/GameControls";
 import useCreateRoom from "./hooks/useCreateRoom";
 import useJoinRoom from "./hooks/useJoinRoom";
 import type { Player } from "./game/GameTypes";
@@ -32,20 +31,25 @@ const App: React.FC = () => {
   const { joinRoom } = useJoinRoom(socket, name, clientId);
   const [players, setPlayers] = useState<Player[]>([]);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [showControls, setShowControls] = useState(false);
+  const [isGoingBack, setIsGoingBack] = useState(false);
 
   const audio = useRef(new Audio());
 
   const toggleBackgroundSound = () => {
     if (isAudioPlaying) {
       audio.current.pause();
+      setIsAudioPlaying(false);
     } else {
       audio.current.loop = true;
-      audio.current
-        .play()
-        .catch((error) => console.error("Audio playback failed:", error));
+      audio.current.play()
+        .then(() => {
+          setIsAudioPlaying(true);
+        })
+        .catch((error) => {
+          console.error("Audio playback failed:", error);
+          setIsAudioPlaying(false);
+        });
     }
-    setIsAudioPlaying(!isAudioPlaying);
   };
 
   useEffect(() => {
@@ -101,15 +105,33 @@ const App: React.FC = () => {
   }, [socket]);
 
   useEffect(() => {
+    if (isGoingBack) {
+      setIsGoingBack(false);
+      return
+    };
     if (phase === GamePhase.START) {
       audio.current.pause();
       audio.current = new Audio(backgroundMusic);
-      setIsAudioPlaying(false);
+      audio.current.play()
+        .then(() => {
+          setIsAudioPlaying(true);
+        })
+        .catch((error) => {
+          console.error("Audio playback failed:", error);
+          setIsAudioPlaying(false);
+        });
     } else if (phase === GamePhase.GAME) {
       toast.dismiss();
       audio.current.pause();
-      setIsAudioPlaying(false);
       audio.current = new Audio(gameMusic);
+      audio.current.play()
+        .then(() => {
+          setIsAudioPlaying(true);
+        })
+        .catch((error) => {
+          console.error("Audio playback failed:", error);
+          setIsAudioPlaying(false);
+        });
     }
   }, [phase]);
 
@@ -126,10 +148,6 @@ const App: React.FC = () => {
           {isAudioPlaying ? "🔇 Turn Off Sound" : "🔊 Play Sound"}
         </button>
       </div>
-
-      <Modal isOpen={showControls} onClose={() => setShowControls(false)}>
-        <GameControls />
-      </Modal>
 
       {phase === GamePhase.START && (
         <StartScreen
@@ -152,7 +170,10 @@ const App: React.FC = () => {
 
       <Modal
         isOpen={phase === GamePhase.LOBBY}
-        onClose={() => setPhase(GamePhase.START)}
+        onClose={() => {
+          setIsGoingBack(true);
+          setPhase(GamePhase.START);
+        }}
       >
         {role && socket && (
           <WaitingRoom
