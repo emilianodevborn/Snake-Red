@@ -121,10 +121,12 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
       if (deadSnakeIds.has(snake.id)) {
         const consumed = snake.segments.length - 1;
         const dropCount = Math.floor(consumed / 2);
-        const drops: Food[] = snake.segments.slice(-dropCount).map((seg) => ({
-          coordinates: seg,
-          sprite: generateRandomFoodSprite(),
-        }));
+        const drops: Food[] = snake.segments
+          .slice(-dropCount)
+          .map((seg) => ({
+            coordinates: seg,
+            sprite: generateRandomFoodSprite(),
+          }));
         newFoodArray = [...newFoodArray, ...drops];
         return null; // La serpiente muere
       } else {
@@ -148,26 +150,52 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
             ({ coordinates: f }) =>
               !(f.x === snake.newHead.x && f.y === snake.newHead.y)
           );
-          const foodToBeGeneratedQuantity = prevState.snakes.length;
+
           newFoodArray = [
             ...newFoodArray,
-            ...generateFood(foodToBeGeneratedQuantity),
+            ...generateFood(1, snakesWithNewHead, newObstacles, newFoodArray, snake.newHead),
           ];
-          newConsumedFood += foodToBeGeneratedQuantity;
+          newConsumedFood += 1;
         }
-        // Cada 2 comidas consumidas, generamos un obstáculo
+        // Cada X comidas consumidas, generamos un obstáculo
         const parsedDifficulty = parseInt(difficulty);
         if (ateFood && newConsumedFood % parsedDifficulty === 0) {
-          const obstacle = generateObstacle();
+          const obstacle = generateObstacle(
+            snake.newHead,
+            snake.segments.length,
+            newObstacles,
+            newFoodArray,
+            snakesWithNewHead,
+          );
           newObstacles.push(obstacle);
         }
-        const newSegments = ateFood
-          ? [snake.newHead, ...snake.segments]
-          : [snake.newHead, ...snake.segments.slice(0, -1)];
+        // Actualización de los segmentos con dirección almacenada:
+        // Creamos el nuevo segmento de cabeza con la dirección actual.
+        const newHeadSegment = { ...snake.newHead, direction: snake.direction };
+
+        // Ahora, para el cuerpo, cada segmento "sigue" la dirección del segmento que estaba delante.
+        // Es decir, para i >= 1, newSegments[i] = snake.segments[i-1].
+        let newSegments: { x: number; y: number; direction: Coordinate }[] = [];
+
+        newSegments.push(newHeadSegment);
+
+        // Si la snake come, conservamos todos los segmentos; si no, eliminamos el último.
+        const body = ateFood
+          ? snake.segments
+          : snake.segments.slice(0, -1);
+
+        // Actualizamos cada segmento del cuerpo:
+        for (let i = 0; i < body.length; i++) {
+          // Asumimos que cada segmento ya tenía su propiedad 'direction'.
+          // Opcionalmente, podríamos actualizarla para que cada segmento tome la dirección del segmento anterior.
+          newSegments.push(body[i]);
+        }
+
         return { ...snake, segments: newSegments };
       }
     })
     .filter((snake) => snake !== null) as Snake[];
+
 
   /**
    * Paso 6 - Game over logic:

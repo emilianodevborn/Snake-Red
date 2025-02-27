@@ -2,7 +2,7 @@ import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   GRID_SIZE,
-  type Coordinate, BOT_NAMES,
+  type Coordinate, BOT_NAMES, Snake, Food, SnakeSegment,
 } from "./GameTypes";
 
 // src/game/utils.ts
@@ -46,4 +46,52 @@ export const assignBotName = (bots: any[], botDifficulty: string) => {
     return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
   }
   return `${unusedNames[0]} (${botDifficulty})`;
+}
+
+export function isValidPosition(
+  pos: Coordinate,
+  snakes: Snake[],
+  obstacles?: Coordinate[],
+  foods?: Coordinate[],
+  head?: Coordinate,
+): boolean {
+  const occupied = new Set<string>();
+  head && occupied.add(`${head.x},${head.y}`)
+  // Agregar obstáculos
+  obstacles && obstacles.forEach(item => {
+    occupied.add(`${item.x},${item.y}`);
+  });
+
+  // Agregar comidas
+  foods && foods.forEach(item => {
+    occupied.add(`${item.x},${item.y}`);
+  });
+
+  // Agregar segmentos de todas las serpientes
+  snakes.forEach(snake => {
+    snake.segments.forEach(seg => {
+      occupied.add(`${seg.x},${seg.y}`);
+    });
+  });
+
+  // Si la posición pos está en el conjunto, no es válida
+  return !occupied.has(`${pos.x},${pos.y}`);
+}
+
+export function generateSnakeSegments(
+  head: Coordinate,
+  snakeLength: number,
+  direction: Coordinate
+): SnakeSegment[] {
+  // El cuerpo se extiende en la dirección opuesta al movimiento.
+  const opposite = { x: -direction.x, y: -direction.y };
+  const segments: SnakeSegment[] = [];
+  for (let i = 0; i < snakeLength; i++) {
+    segments.push({
+      x: head.x + i * opposite.x,
+      y: head.y + i * opposite.y,
+      direction: { ...direction }
+    });
+  }
+  return segments;
 }

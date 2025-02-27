@@ -3,6 +3,8 @@ import obstacle from "../assets/obstacle.png";
 import snakeBody from "../assets/snake-body.png";
 import snakeHead from "../assets/snake-head.png";
 import snakeTail from "../assets/snake-tail.png";
+import orange from "../assets/orange.svg";
+import lemon from "../assets/lemon.svg";
 import { updateGameState } from "../game/GameLogic";
 import {
   AVAILABLE_COLORS,
@@ -12,10 +14,10 @@ import {
   DIFFICULTY_LEVELS,
   GameState,
   GRID_SIZE,
-  type Player,
+  type Player, Snake,
 } from "../game/GameTypes";
 import { generateFood } from "../game/generateFood";
-import { getConstrainedTransform, getMessageText } from "../game/utils";
+import {generateSnakeSegments, getConstrainedTransform, getMessageText} from "../game/utils";
 
 import { computeBotState, getBotMove, mapActionToDirection } from "./bot";
 import {
@@ -59,6 +61,14 @@ tailImage.src = snakeTail;
 const obstable = new Image();
 obstable.src = obstacle;
 
+const orangeFood = new Image();
+orangeFood.src = orange;
+orangeFood.height = 100;
+
+const lemonFood = new Image();
+lemonFood.src = lemon;
+lemonFood.height = 100;
+
 const GameView: React.FC<GameViewProps> = ({
   role,
   socket,
@@ -71,26 +81,32 @@ const GameView: React.FC<GameViewProps> = ({
   const [showControls, setShowControls] = useState(false);
 
   const hasHumanPlayers = players.filter(p => !p.isBot && p.id !== localPlayerId).length > 0;
+  const baseX = Math.floor((CANVAS_WIDTH / GRID_SIZE) / (players.length + 1));
+  const separationX = Math.floor((CANVAS_WIDTH / GRID_SIZE) / (players.length + 1));
+  const headY = Math.floor((CANVAS_HEIGHT / GRID_SIZE) / 2);
+  const snakeLength = 3;
+  const snakes: Snake[] = players.map((player, index) => {
+    const direction: Coordinate = index % 2 === 0 ? { x: 0, y: -1 } : { x: 0, y: 1 };
+    const head: Coordinate = {
+      x: baseX + index * separationX,
+      y: headY,
+    };
+    const segments = generateSnakeSegments(head, snakeLength, direction);
+    return {
+      id: player.id,
+      segments,
+      direction,
+      color: !!player.colorIndex
+        ? AVAILABLE_COLORS[player.colorIndex]
+        : "green",
+    };
+  });
 
   const [gameState, setGameState] = useState<GameState>({
     ...initialGameState,
-    food: generateFood(2 * players.length),
+    food: generateFood(10, snakes),
     scores: players.map((p) => ({ id: p.id, name: p.name, score: 0 })),
-    snakes: players.map((player, i) => {
-      return {
-        id: player.id,
-        segments: [
-          ...Array.from({ length: 3 }, (_, innerIndex) => ({
-            x: 10 * (i + 1),
-            y: 10 + innerIndex,
-          })),
-        ],
-        direction: { x: 0, y: i % 2 ? 1 : -1 },
-        color: !!player.colorIndex
-          ? AVAILABLE_COLORS[player.colorIndex]
-          : "green",
-      };
-    }),
+    snakes: snakes,
   });
 
   const snakePosition: Coordinate = useMemo(() => {
@@ -331,14 +347,12 @@ const GameView: React.FC<GameViewProps> = ({
 
     // Show food
     gameState.food.forEach(({ coordinates, sprite }) => {
-      const image = new Image();
-      image.src = sprite;
       ctx.drawImage(
-        image,
-        coordinates.x * GRID_SIZE,
-        coordinates.y * GRID_SIZE,
-        GRID_SIZE,
-        GRID_SIZE
+        sprite === 'lemon' ? lemonFood : orangeFood,
+        (coordinates.x * GRID_SIZE) - (0.25 * GRID_SIZE),
+        (coordinates.y * GRID_SIZE) - (0.25 * GRID_SIZE),
+        GRID_SIZE * 1.5,
+        GRID_SIZE * 1.5
       );
     });
 
@@ -367,21 +381,17 @@ const GameView: React.FC<GameViewProps> = ({
                   name: p.name,
                   score: 0,
                 })),
-                food: generateFood(2 * players.length),
-                snakes: players.map((player, i) => {
-                  const isHorizontal = Math.random() < 0.5;
-                  const direction = isHorizontal
-                    ? { x: Math.random() < 0.5 ? 1 : -1, y: 0 }
-                    : { x: 0, y: Math.random() < 0.5 ? 1 : -1 };
-
+                food: generateFood(10, snakes),
+                snakes: players.map((player, index) => {
+                  const direction: Coordinate = index % 2 === 0 ? { x: 0, y: -1 } : { x: 0, y: 1 };
+                  const head: Coordinate = {
+                    x: baseX + index * separationX,
+                    y: headY,
+                  };
+                  const segments = generateSnakeSegments(head, snakeLength, direction);
                   return {
                     id: player.id,
-                    segments: [
-                      ...Array.from({ length: 3 }, (_, innerIndex) => ({
-                        x: 10 * (i + 1),
-                        y: 10 + innerIndex,
-                      })),
-                    ],
+                    segments,
                     direction,
                     color: !!player.colorIndex
                       ? AVAILABLE_COLORS[player.colorIndex]

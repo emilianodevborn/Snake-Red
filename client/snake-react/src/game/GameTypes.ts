@@ -6,9 +6,15 @@ export interface Food {
   sprite: string;
 }
 
+export interface SnakeSegment {
+  x: number;
+  y: number;
+  direction: { x: number; y: number };
+}
+
 export interface Snake {
   id: string;
-  segments: Coordinate[];
+  segments: SnakeSegment[];
   direction: Coordinate;
   color: (typeof AVAILABLE_COLORS)[number];
   newHead?: Coordinate;
