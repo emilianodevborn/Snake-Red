@@ -233,7 +233,7 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
     prevState.isMultiplayer ||
     prevState.snakes.filter((snake) => !snake.isBot).length > 1;
 
-  const isGameOver = updatedSnakes.filter((s) => !s.isBot).length <= 1;
+  const isGameOver = !updatedSnakes.filter((s) => !s.isBot).length;
 
   // Step 7 - Determine scores
 

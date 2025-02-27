@@ -579,7 +579,7 @@ const GameView: React.FC<GameViewProps> = ({
         case "strawberry":
           img = strawberryFood;
           break;
-        case 'goldenApple':
+        case "goldenApple":
           img = goldenAppleFood;
           break;
         default:
@@ -610,7 +610,7 @@ const GameView: React.FC<GameViewProps> = ({
   return (
     <div style={wrapperStyles}>
       <AnimatePresence>
-        {gameState.isGameOver && !hasHumanPlayers && (
+        {gameState.isGameOver && (
           <GameOver
             isSinglePlayer={isSinglePlayer}
             onTryAgain={() =>
