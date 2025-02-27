@@ -8,6 +8,7 @@ import GameControls from "./components/GameControls";
 import { Button } from "./components/Button";
 import Input from "./components/Input";
 import Logo from "./assets/logo.svg";
+import Orange from "./assets/orange-with-hands.svg";
 
 interface StartScreenProps {
   onSelectClient: () => void;
@@ -33,7 +34,7 @@ const StartScreen: FC<StartScreenProps> = ({
   return (
     <div className="flex flex-col justify-center items-center w-[480px] gap-16">
       <img src={Logo} alt="Logo Centibite" />
-      <div className="w-96 flex flex-col justify-center items-center gap-4">
+      <div className="w-96 flex flex-col justify-center items-center gap-4 relative">
         {/* <div className="text-6xl font-bold text-black">Snake Multiplayer</div> */}
         {/* <div
         className="text-4xl font-bold text-red-500 hover:underline cursor-pointer transition-all duration-200"
@@ -62,6 +63,11 @@ const StartScreen: FC<StartScreenProps> = ({
             JOIN GAME
           </Button>
         </div>
+        <img
+          src={Orange}
+          alt="Orange With Hands"
+          className="hidden size-44 md:flex md:absolute md:right-[-175px] md:bottom-0"
+        />
         {/* <GameInputs
         label="Name"
         value={name}
