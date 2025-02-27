@@ -5,6 +5,8 @@ import GameInputs from "./components/GameInputs";
 import Separator from "./components/Separator";
 import Modal from "./components/Modal";
 import GameControls from "./components/GameControls";
+import { Button } from "./components/Button";
+import Input from "./components/Input";
 
 interface StartScreenProps {
   onSelectClient: () => void;
@@ -27,19 +29,43 @@ const StartScreen: FC<StartScreenProps> = ({
   const isCreateButtonDisabled = name.trim() === "";
   const [showControls, setShowControls] = useState(false);
 
+  console.log("name", name);
+
   return (
-    <div className="bg-[#F7F6DF] w-screen h-screen flex flex-col justify-center items-center gap-10 text-white">
-      <div className="text-6xl font-bold text-black">Snake Multiplayer</div>
-      <div
+    <div className="w-96 h-96 flex flex-col justify-center items-center gap-4">
+      {/* <div className="text-6xl font-bold text-black">Snake Multiplayer</div> */}
+      {/* <div
         className="text-4xl font-bold text-red-500 hover:underline cursor-pointer transition-all duration-200"
         onClick={() => setShowControls(true)}
       >
         How to play?
-      </div>
+      </div> */}
       <Modal isOpen={showControls} onClose={() => setShowControls(false)}>
         <GameControls />
       </Modal>
-      <GameInputs
+      <Input
+        placeholder="Enter your name"
+        className="w-full"
+        onChange={(e) => setName(e.target.value)}
+      />
+      <Input
+        placeholder="Enter ID (Optional)"
+        className="w-full"
+        onChange={(e) => setClientId(e.target.value)}
+      />
+      <div className="flex flex-col gap-2 w-full">
+        <Button
+          variant="secondary"
+          disabled={isCreateButtonDisabled}
+          onClick={onSelectHost}
+        >
+          CREATE A GAME
+        </Button>
+        <Button disabled={isJoinButtonDisabled} onClick={onSelectClient}>
+          JOIN GAME
+        </Button>
+      </div>
+      {/* <GameInputs
         label="Name"
         value={name}
         onChange={setName}
@@ -68,7 +94,7 @@ const StartScreen: FC<StartScreenProps> = ({
         color={isCreateButtonDisabled ? "gray" : "black"}
         text="Create game"
         disabled={isCreateButtonDisabled}
-      />
+      /> */}
     </div>
   );
 };

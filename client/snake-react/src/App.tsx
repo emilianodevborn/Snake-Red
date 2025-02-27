@@ -114,7 +114,10 @@ const App: React.FC = () => {
   }, [phase]);
 
   return (
-    <div>
+    <div
+      className="w-screen h-screen flex justify-center items-center"
+      style={{ backgroundImage: "url('/grass.svg')" }}
+    >
       <div className="absolute right-2 top-2 flex flex-col gap-2">
         <button
           className="bg-white px-4 py-2 rounded-lg border border-black hover:bg-gray-100 transition-all duration-200"

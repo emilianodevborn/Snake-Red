@@ -12,11 +12,15 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   return (
     <button
-      className={`p-4 rounded-3xl transition duration-200 border-none w-full ${
+      className={`p-4 rounded-3xl transition duration-200 border-none w-full font-bold shadow-lg cursor-pointer ${
         variant === "primary"
-          ? "bg-[#C60280] text-white hover:bg-[#C60280]/75"
-          : "bg-white text-[#C60280] hover:bg-white/75"
-      } ${disabled ? "opacity-50 cursor-not-allowed hover:bg-opacity-50" : ""}`}
+          ? "bg-[#C60280] text-white hover:bg-[#C60280]/80"
+          : "bg-white text-[#C60280] hover:bg-white/80"
+      } ${
+        disabled
+          ? "bg-gray-400 cursor-not-allowed text-gray-700 hover:bg-gray-400 "
+          : ""
+      }`}
       disabled={disabled}
       {...props}
     >
