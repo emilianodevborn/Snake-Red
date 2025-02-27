@@ -7,7 +7,7 @@ interface LoadingViewProps {
 }
 
 const LoadingView: React.FC<LoadingViewProps> = ({ onReady, socket }) => {
-  const [status, setStatus] = useState("Esperando que inicie el juego...");
+  const [status, setStatus] = useState("Waiting for game to start...");
 
   useEffect(() => {
     let readyCalled = false;
@@ -16,15 +16,15 @@ const LoadingView: React.FC<LoadingViewProps> = ({ onReady, socket }) => {
       try {
         const data = JSON.parse(event.data);
         if (data.type === "startGame") {
-          console.log("Inicio de juego confirmado por el servidor");
-          setStatus("¡Juego iniciado!");
+          console.log("Game starting confirmed by the server");
+          setStatus("Game started!");
           if (!readyCalled) {
             readyCalled = true;
             onReady();
           }
         }
       } catch (err) {
-        console.error("Error parseando mensaje en LoadingView:", err);
+        console.error("Error happening in the game start:", err);
       }
     };
 
@@ -32,7 +32,7 @@ const LoadingView: React.FC<LoadingViewProps> = ({ onReady, socket }) => {
 
     // Fallback: si después de 2 segundos no se recibe startGame, asumimos que ya inició
     const timeout = setTimeout(() => {
-      console.warn("Timeout en LoadingView, asumiendo juego iniciado");
+      console.warn("Timeout in LoadingView, assuming game started");
       if (!readyCalled) {
         readyCalled = true;
         onReady();
@@ -47,7 +47,7 @@ const LoadingView: React.FC<LoadingViewProps> = ({ onReady, socket }) => {
 
   return (
     <div>
-      <h2>Cargando...</h2>
+      <h2>Loading...</h2>
       <p>{status}</p>
     </div>
   );
