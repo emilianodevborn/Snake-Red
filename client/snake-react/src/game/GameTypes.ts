@@ -59,9 +59,9 @@ export const AVAILABLE_COLORS = [
 ] as const;
 
 export const DIFFICULTY_LEVELS = {
-  "1": 150,
-  "2": 100,
-  "3": 50,
+  "1": 12,
+  "2": 8,
+  "3": 5,
 } as const;
 
 export const BOT_NAMES = ['Bot-tanic', 'MultiLegs-Mike', 'Centi-Bot', 'Leggy-McBot', 'Bot-of-Many-Legs']

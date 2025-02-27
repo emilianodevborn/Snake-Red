@@ -139,7 +139,7 @@ const GameView: React.FC<GameViewProps> = ({
       color: !!player.colorIndex
         ? AVAILABLE_COLORS[player.colorIndex]
         : "green",
-      speedFactor: 10,
+      speedFactor: DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS],
     };
   });
 
@@ -532,7 +532,7 @@ const GameView: React.FC<GameViewProps> = ({
                     color: !!player.colorIndex
                       ? AVAILABLE_COLORS[player.colorIndex]
                       : "green",
-                    speedFactor: 5,
+                    speedFactor: DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS],
                   };
                 }),
               })
