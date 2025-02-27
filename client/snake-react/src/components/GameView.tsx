@@ -1,10 +1,21 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import obstacle from "../assets/obstacle.png";
-import snakeBody from "../assets/snake-body.png";
-import snakeHead from "../assets/snake-head.png";
-import snakeTail from "../assets/snake-tail.png";
+import obstacle from "../assets/skul.svg";
+import faceDown from "../assets/face-down.svg";
+import faceUp from "../assets/face-up.svg";
+import faceLeft from "../assets/face-left.svg";
+import faceRight from "../assets/face-right.svg";
+import bodyUp from "../assets/body-down.svg";
+import bodyDown from "../assets/body-up.svg";
+import bodyRight from "../assets/body-left.svg";
+import bodyLeft from "../assets/body-right.svg";
 import orange from "../assets/orange.svg";
 import lemon from "../assets/lemon.svg";
+import apple from "../assets/apple.svg";
+import cherry from "../assets/cherry.svg";
+import mushroom from "../assets/mushroom.svg";
+import strawberry from "../assets/strawberry.svg";
+import watermelon from "../assets/watermelon.svg";
+
 import { updateGameState } from "../game/GameLogic";
 import {
   AVAILABLE_COLORS,
@@ -49,25 +60,53 @@ const initialGameState = {
   isMultiplayer: false,
 };
 
-const headImage = new Image();
-headImage.src = snakeHead;
+const faceUpImage = new Image();
+faceUpImage.src = faceUp;
 
-const bodyImage = new Image();
-bodyImage.src = snakeBody;
+const faceDownImage = new Image();
+faceDownImage.src = faceDown;
 
-const tailImage = new Image();
-tailImage.src = snakeTail;
+const faceRightImage = new Image();
+faceRightImage.src = faceRight;
+
+const faceLeftImage = new Image();
+faceLeftImage.src = faceLeft;
+
+const bodyUpImage = new Image();
+bodyUpImage.src = bodyUp;
+
+const bodyDownImage = new Image();
+bodyDownImage.src = bodyDown;
+
+const bodyRightImage = new Image();
+bodyRightImage.src = bodyRight;
+
+const bodyLeftImage = new Image();
+bodyLeftImage.src = bodyLeft;
 
 const obstable = new Image();
 obstable.src = obstacle;
 
 const orangeFood = new Image();
 orangeFood.src = orange;
-orangeFood.height = 100;
 
 const lemonFood = new Image();
 lemonFood.src = lemon;
-lemonFood.height = 100;
+
+const appleFood = new Image();
+appleFood.src = apple;
+
+const cherryFood = new Image();
+cherryFood.src = cherry;
+
+const mushroomFood = new Image();
+mushroomFood.src = mushroom;
+
+const strawberryFood = new Image();
+strawberryFood.src = strawberry;
+
+const watermelonFood = new Image();
+watermelonFood.src = watermelon;
 
 const GameView: React.FC<GameViewProps> = ({
   role,
@@ -79,6 +118,7 @@ const GameView: React.FC<GameViewProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const tickCounterRef = useRef(0);
 
   const hasHumanPlayers = players.filter(p => !p.isBot && p.id !== localPlayerId).length > 0;
   const baseX = Math.floor((CANVAS_WIDTH / GRID_SIZE) / (players.length + 1));
@@ -99,12 +139,13 @@ const GameView: React.FC<GameViewProps> = ({
       color: !!player.colorIndex
         ? AVAILABLE_COLORS[player.colorIndex]
         : "green",
+      speedFactor: 10,
     };
   });
 
   const [gameState, setGameState] = useState<GameState>({
     ...initialGameState,
-    food: generateFood(10, snakes),
+    food: generateFood(100, snakes),
     scores: players.map((p) => ({ id: p.id, name: p.name, score: 0 })),
     snakes: snakes,
   });
@@ -123,13 +164,14 @@ const GameView: React.FC<GameViewProps> = ({
   useEffect(() => {
     if (role !== "host" || isPaused) return;
 
-    const updateGame = async () => {
+    const updateGame = async (tickCount: number) => {
       // 1. Actualiza el estado normal del juego
       const newState = updateGameState({
         prevState: gameState,
         difficulty,
         role,
         localPlayerId,
+        tickCount,
       });
 
       // 2. Filtra los bots (suponiendo que players contiene los jugadores con isBot)
@@ -165,8 +207,10 @@ const GameView: React.FC<GameViewProps> = ({
     };
 
     const interval = setInterval(() => {
-      updateGame();
-    }, DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS]);
+      tickCounterRef.current += 1;
+      const newTick = tickCounterRef.current;
+      updateGame(newTick);
+    }, 10);
     return () => clearInterval(interval);
   }, [role, socket, gameState, players, isPaused]);
 
@@ -330,25 +374,117 @@ const GameView: React.FC<GameViewProps> = ({
 
     gameState.snakes.forEach((snake) => {
       snake.segments.forEach((segment, index) => {
-        let img = bodyImage;
+        let img: HTMLImageElement;
+        if (index === 0) {
+          if (segment.direction.x === -1) {
+            img = faceLeftImage
+            ctx.drawImage(
+              img,
+              (segment.x * GRID_SIZE) - 0.4 * GRID_SIZE,
+              (segment.y * GRID_SIZE) - 0.25 * GRID_SIZE,
+              GRID_SIZE * 1.5,
+              GRID_SIZE * 1.5
+            );
+          } else if (segment.direction.x === 1) {
+            img = faceRightImage
+            ctx.drawImage(
+              img,
+              (segment.x * GRID_SIZE) - 0.1 * GRID_SIZE,
+              (segment.y * GRID_SIZE) - 0.25 * GRID_SIZE,
+              GRID_SIZE * 1.5,
+              GRID_SIZE * 1.5
+            );
+          } else if (segment.direction.y === -1) {
+            img = faceUpImage
+            ctx.drawImage(
+              img,
+              (segment.x * GRID_SIZE) - 0.3 * GRID_SIZE,
+              (segment.y * GRID_SIZE) - 0.4 * GRID_SIZE,
+              GRID_SIZE * 1.5,
+              GRID_SIZE * 1.5
+            );
+          } else {
+            img = faceDownImage
+            ctx.drawImage(
+              img,
+              (segment.x * GRID_SIZE) - 0.2 * GRID_SIZE,
+              (segment.y * GRID_SIZE) - 0.15 * GRID_SIZE,
+              GRID_SIZE * 1.5,
+              GRID_SIZE * 1.5
+            );
+          }
+        } else {
+          if (segment.direction.x === -1) {
+            img = bodyLeftImage
+            ctx.drawImage(
+              img,
+              (segment.x * GRID_SIZE) - 0.25 * GRID_SIZE,
+              (segment.y * GRID_SIZE) - GRID_SIZE,
+              GRID_SIZE * 1.5,
+              GRID_SIZE * 3
+            );
+          } else if (segment.direction.x === 1) {
+            img = bodyRightImage
+            ctx.drawImage(
+              img,
+              (segment.x * GRID_SIZE) - 0.25 * GRID_SIZE,
+              (segment.y * GRID_SIZE) - GRID_SIZE,
+              GRID_SIZE * 1.5,
+              GRID_SIZE * 3
+            );
+          } else if (segment.direction.y === -1) {
+            img = bodyUpImage
+            ctx.drawImage(
+              img,
+              (segment.x * GRID_SIZE) - GRID_SIZE,
+              (segment.y * GRID_SIZE) - 0.25 * GRID_SIZE,
+              GRID_SIZE * 3,
+              GRID_SIZE * 1.5
+            );
+          } else {
+            img = bodyDownImage
+            ctx.drawImage(
+              img,
+              (segment.x * GRID_SIZE) - GRID_SIZE,
+              (segment.y * GRID_SIZE) - 0.25 * GRID_SIZE,
+              GRID_SIZE * 3,
+              GRID_SIZE * 1.5
+            );
+          }
+        }
 
-        if (index === 0) img = headImage;
-        else if (index === snake.segments.length - 1) img = tailImage;
-
-        ctx.drawImage(
-          img,
-          segment.x * GRID_SIZE,
-          segment.y * GRID_SIZE,
-          GRID_SIZE,
-          GRID_SIZE
-        );
       });
     });
 
     // Show food
     gameState.food.forEach(({ coordinates, sprite }) => {
+      let img: HTMLImageElement;
+      switch(sprite) {
+        case 'lemon':
+          img = lemonFood
+          break;
+        case 'orange':
+          img = orangeFood
+          break;
+        case 'apple':
+          img = appleFood
+          break;
+        case 'cherry':
+          img = cherryFood
+          break;
+        case 'mushroom':
+          img = mushroomFood
+          break;
+        case 'strawberry':
+          img = strawberryFood
+          break;
+        default:
+          img = watermelonFood
+          break;
+
+      }
       ctx.drawImage(
-        sprite === 'lemon' ? lemonFood : orangeFood,
+        img,
         (coordinates.x * GRID_SIZE) - (0.25 * GRID_SIZE),
         (coordinates.y * GRID_SIZE) - (0.25 * GRID_SIZE),
         GRID_SIZE * 1.5,
@@ -360,10 +496,10 @@ const GameView: React.FC<GameViewProps> = ({
     gameState.obstacles.forEach((obstacle) => {
       ctx.drawImage(
         obstable,
-        obstacle.x * GRID_SIZE,
-        obstacle.y * GRID_SIZE,
-        GRID_SIZE,
-        GRID_SIZE
+        (obstacle.x * GRID_SIZE) - (0.25 * GRID_SIZE),
+        (obstacle.y * GRID_SIZE) - (0.25 * GRID_SIZE),
+        GRID_SIZE * 1.5,
+        GRID_SIZE * 1.5
       );
     });
   }, [gameState]);
@@ -396,6 +532,7 @@ const GameView: React.FC<GameViewProps> = ({
                     color: !!player.colorIndex
                       ? AVAILABLE_COLORS[player.colorIndex]
                       : "green",
+                    speedFactor: 5,
                   };
                 }),
               })

@@ -19,10 +19,11 @@ type UpdateGameStateParams = {
   difficulty: string;
   role: "host" | "client";
   localPlayerId: string;
+  tickCount: number;
 };
 
 export const updateGameState = (params: UpdateGameStateParams): GameState => {
-  const { prevState, difficulty, role, localPlayerId } = params;
+  const { prevState, difficulty, role, localPlayerId, tickCount } = params;
   if (prevState.isGameOver) return prevState;
   let updatedScores = prevState.scores;
 
@@ -34,13 +35,18 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
   // Paso 1: calcular la nueva cabeza para cada serpiente (sin clamping)
   const snakesWithNewHead = prevState.snakes.map((snake) => {
     const head = snake.segments[0];
-    let calcX = head.x + snake.direction.x;
-    let calcY = head.y + snake.direction.y;
-    const newHead: Coordinate = {
-      x: Math.max(0, Math.min(calcX, maxX)),
-      y: Math.max(0, Math.min(calcY, maxY)),
-    };
-    return { ...snake, newHead };
+    if (tickCount % snake.speedFactor === 0) {
+      let calcX = head.x + snake.direction.x;
+      let calcY = head.y + snake.direction.y;
+      const newHead: Coordinate = {
+        x: Math.max(0, Math.min(calcX, maxX)),
+        y: Math.max(0, Math.min(calcY, maxY)),
+      };
+      return { ...snake, newHead };
+    } else {
+      // Si no es momento de mover, la cabeza se mantiene igual
+      return { ...snake, newHead: head };
+    }
   });
 
   // Paso 1.5: Validar colisión con la pared
@@ -49,9 +55,9 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
     const { newHead, id } = snake;
     if (
       newHead.x < 0 ||
-      newHead.x >= maxX ||
+      newHead.x > maxX ||
       newHead.y < 0 ||
-      newHead.y >= maxY
+      newHead.y > maxY
     ) {
       deadSnakeIds.add(id);
     }
@@ -169,28 +175,21 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
           );
           newObstacles.push(obstacle);
         }
-        // Actualización de los segmentos con dirección almacenada:
-        // Creamos el nuevo segmento de cabeza con la dirección actual.
-        const newHeadSegment = { ...snake.newHead, direction: snake.direction };
-
-        // Ahora, para el cuerpo, cada segmento "sigue" la dirección del segmento que estaba delante.
-        // Es decir, para i >= 1, newSegments[i] = snake.segments[i-1].
+        // Actualización de segmentos con dirección almacenada:
+        // Solo actualizamos si la snake se movió en este tick.
         let newSegments: { x: number; y: number; direction: Coordinate }[] = [];
-
-        newSegments.push(newHeadSegment);
-
-        // Si la snake come, conservamos todos los segmentos; si no, eliminamos el último.
-        const body = ateFood
-          ? snake.segments
-          : snake.segments.slice(0, -1);
-
-        // Actualizamos cada segmento del cuerpo:
-        for (let i = 0; i < body.length; i++) {
-          // Asumimos que cada segmento ya tenía su propiedad 'direction'.
-          // Opcionalmente, podríamos actualizarla para que cada segmento tome la dirección del segmento anterior.
-          newSegments.push(body[i]);
+        if (tickCount % snake.speedFactor === 0) {
+          // Creamos el nuevo segmento de cabeza con la dirección actual.
+          const newHeadSegment = { ...snake.newHead, direction: snake.direction };
+          newSegments.push(newHeadSegment);
+          // Para cada segmento del cuerpo, desplazamos el arreglo: cada segmento adopta la posición del que estaba delante.
+          // Si la snake come, conservamos todos los segmentos; si no, eliminamos el último.
+          const body = ateFood ? snake.segments : snake.segments.slice(0, -1);
+          newSegments = newSegments.concat(body);
+        } else {
+          // Si no se movió, se conserva el arreglo actual.
+          newSegments = snake.segments;
         }
-
         return { ...snake, segments: newSegments };
       }
     })

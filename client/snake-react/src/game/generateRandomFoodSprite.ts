@@ -1,5 +1,13 @@
 export const generateRandomFoodSprite = () => {
-  const random = Math.random();
-
-  return random < 0.5 ? 'orange' : 'lemon';
+  const fruits = [
+    'apple',
+    'cherry',
+    'lemon',
+    'mushroom',
+    'orange',
+    'strawberry',
+    'watermelon'
+  ];
+  const index = Math.floor(Math.random() * fruits.length);
+  return fruits[index];
 };

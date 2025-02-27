@@ -158,9 +158,9 @@ export function isObstacle(
   // Verificar límites del área de juego
   if (
     nextPoint.x < 0 ||
-    nextPoint.x >= CANVAS_WIDTH / GRID_SIZE ||
+    nextPoint.x >= CANVAS_WIDTH / GRID_SIZE - 1 ||
     nextPoint.y < 0 ||
-    nextPoint.y >= CANVAS_HEIGHT / GRID_SIZE
+    nextPoint.y >= CANVAS_HEIGHT / GRID_SIZE - 1
   ) {
     console.log("LIMITE ", relDir);
     return true;

@@ -17,6 +17,7 @@ export interface Snake {
   segments: SnakeSegment[];
   direction: Coordinate;
   color: (typeof AVAILABLE_COLORS)[number];
+  speedFactor: number;
   newHead?: Coordinate;
   isBot?: boolean;
 }

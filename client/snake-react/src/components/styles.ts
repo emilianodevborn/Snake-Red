@@ -18,6 +18,7 @@ export const canvasContainerStyles: CSSProperties = {
   width: "800px",
   height: "600px",
   position: "relative",
+  flexShrink: 0,
 };
 
 export const boardStyles: CSSProperties = {
