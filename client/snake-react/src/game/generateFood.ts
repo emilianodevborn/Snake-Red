@@ -1,11 +1,12 @@
 // src/game/generateFood.ts
 import {CANVAS_WIDTH, CANVAS_HEIGHT, GRID_SIZE, Food, Coordinate, Snake} from "./GameTypes";
 import { generateRandomFoodSprite } from "./generateRandomFoodSprite";
-import {isValidPosition} from "./utils";
+import {generateFoodModifier, isValidPosition} from "./utils";
 
 export const generateFood = (
   quantity: number = 1,
   snakes: Snake[],
+  difficulty: string,
   obstacles?: Coordinate[],
   existingFoods?: Food[],
   head?: Coordinate,
@@ -37,7 +38,10 @@ export const generateFood = (
 
       // Si la posición es válida (no se superpone con obstáculos, comida existente o con cualquier segmento de alguna snake)
       if (isValidPosition(coordinates, snakes, obstacles, existingFoodCoordinates, head)) {
-        candidate = { coordinates, sprite: generateRandomFoodSprite() };
+        const sprite = generateRandomFoodSprite()
+        const multiplier = sprite === 'goldenApple' ? 0.5 : (sprite === 'mushroom' ? 1.5 : 1);
+        const modifier = generateFoodModifier(difficulty, multiplier)
+        candidate = { coordinates, sprite: sprite, modifier: modifier};
       }
       attempts++;
     }
@@ -55,8 +59,10 @@ export const generateFood = (
 
       const finalX = Math.max(0, Math.min(candidateX, w - blockSize));
       const finalY = Math.max(0, Math.min(candidateY, h - blockSize));
-
-      candidate = { coordinates: { x: finalX, y: finalY }, sprite: generateRandomFoodSprite() };
+      const sprite = generateRandomFoodSprite()
+      const multiplier = sprite === 'goldenApple' ? 0.5 : (sprite === 'mushroom' ? 1.5 : 1);
+      const modifier = generateFoodModifier(difficulty, multiplier)
+      candidate = { coordinates: { x: finalX, y: finalY }, sprite: sprite, modifier: modifier };
     }
     foods.push(candidate);
     // Agregar la posición generada para evitar duplicados en el mismo llamado

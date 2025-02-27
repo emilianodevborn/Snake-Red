@@ -6,7 +6,8 @@ export const generateRandomFoodSprite = () => {
     'mushroom',
     'orange',
     'strawberry',
-    'watermelon'
+    'watermelon',
+    'goldenApple'
   ];
   const index = Math.floor(Math.random() * fruits.length);
   return fruits[index];

@@ -1,20 +1,21 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import apple from "../assets/apple.svg";
-import bodyUp from "../assets/body-down.svg";
-import bodyRight from "../assets/body-left.svg";
-import bodyLeft from "../assets/body-right.svg";
-import bodyDown from "../assets/body-up.svg";
-import cherry from "../assets/cherry.svg";
+import obstacle from "../assets/stone.svg";
 import faceDown from "../assets/face-down.svg";
+import faceUp from "../assets/face-up.svg";
 import faceLeft from "../assets/face-left.svg";
 import faceRight from "../assets/face-right.svg";
-import faceUp from "../assets/face-up.svg";
-import lemon from "../assets/lemon.svg";
-import mushroom from "../assets/mushroom.svg";
+import bodyUp from "../assets/body-down.svg";
+import bodyDown from "../assets/body-up.svg";
+import bodyRight from "../assets/body-left.svg";
+import bodyLeft from "../assets/body-right.svg";
 import orange from "../assets/orange.svg";
-import obstacle from "../assets/skul.svg";
+import lemon from "../assets/lemon.svg";
+import apple from "../assets/apple.svg";
+import cherry from "../assets/cherry.svg";
+import mushroom from "../assets/mushroom.svg";
 import strawberry from "../assets/strawberry.svg";
 import watermelon from "../assets/watermelon.svg";
+import goldenApple from "../assets/golden-apple.png";
 
 import { updateGameState } from "../game/GameLogic";
 import {
@@ -178,6 +179,9 @@ strawberryFood.src = strawberry;
 const watermelonFood = new Image();
 watermelonFood.src = watermelon;
 
+const goldenAppleFood = new Image();
+goldenAppleFood.src = goldenApple;
+
 const GameView: React.FC<GameViewProps> = ({
   role,
   socket,
@@ -217,7 +221,7 @@ const GameView: React.FC<GameViewProps> = ({
 
   const [gameState, setGameState] = useState<GameState>({
     ...initialGameState,
-    food: generateFood(100, snakes),
+    food: generateFood(100, snakes, difficulty),
     scores: players.map((p) => ({ id: p.id, name: p.name, score: 0 })),
     snakes: snakes,
   });
@@ -572,6 +576,9 @@ const GameView: React.FC<GameViewProps> = ({
         case "strawberry":
           img = strawberryFood;
           break;
+        case 'goldenApple':
+          img = goldenAppleFood;
+          break;
         default:
           img = watermelonFood;
           break;
@@ -610,7 +617,7 @@ const GameView: React.FC<GameViewProps> = ({
                   name: p.name,
                   score: 0,
                 })),
-                food: generateFood(10, snakes),
+                food: generateFood(10, snakes, difficulty),
                 snakes: players.map((player, index) => {
                   const direction: Coordinate =
                     index % 2 === 0 ? { x: 0, y: -1 } : { x: 0, y: 1 };

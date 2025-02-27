@@ -1,13 +1,10 @@
 import {
-  BOT_NAMES,
   CANVAS_CONTAINER_HEIGHT,
   CANVAS_CONTAINER_WIDTH,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   GRID_SIZE,
-  Snake,
-  SnakeSegment,
-  type Coordinate,
+  type Coordinate, BOT_NAMES, Snake, Food, SnakeSegment, DIFFICULTY_LEVELS,
 } from "./GameTypes";
 
 // src/game/utils.ts
@@ -101,4 +98,8 @@ export function generateSnakeSegments(
     });
   }
   return segments;
+}
+
+export function generateFoodModifier(difficulty: string, modifier: number) {
+  return DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS] * modifier
 }

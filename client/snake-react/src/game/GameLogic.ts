@@ -8,11 +8,12 @@ import {
   Snake,
   Food,
 } from "./GameTypes";
-import { generateFood } from "./generateFood";
-import { generateObstacle } from "./generateObstacle";
+import {generateFood} from "./generateFood";
+import {generateObstacle} from "./generateObstacle";
 import eatSoundFile from "../assets/eat-sound.mp3";
 import deathSoundFile from "../assets/death-sound.mp3";
-import { generateRandomFoodSprite } from "./generateRandomFoodSprite";
+import {generateRandomFoodSprite} from "./generateRandomFoodSprite";
+import {generateFoodModifier} from "./utils";
 
 type UpdateGameStateParams = {
   prevState: GameState;
@@ -23,7 +24,7 @@ type UpdateGameStateParams = {
 };
 
 export const updateGameState = (params: UpdateGameStateParams): GameState => {
-  const { prevState, difficulty, role, localPlayerId, tickCount } = params;
+  const {prevState, difficulty, role, localPlayerId, tickCount} = params;
   if (prevState.isGameOver) return prevState;
   let updatedScores = prevState.scores;
 
@@ -42,17 +43,17 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
         x: Math.max(0, Math.min(calcX, maxX)),
         y: Math.max(0, Math.min(calcY, maxY)),
       };
-      return { ...snake, newHead };
+      return {...snake, newHead};
     } else {
       // Si no es momento de mover, la cabeza se mantiene igual
-      return { ...snake, newHead: head };
+      return {...snake, newHead: head};
     }
   });
 
   // Paso 1.5: Validar colisión con la pared
   const deadSnakeIds = new Set<string>();
   snakesWithNewHead.forEach((snake) => {
-    const { newHead, id } = snake;
+    const {newHead, id} = snake;
     if (
       newHead.x < 0 ||
       newHead.x > maxX ||
@@ -65,7 +66,7 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
 
   // Paso 2: self-collision
   snakesWithNewHead.forEach((snake) => {
-    const { newHead, segments, id } = snake;
+    const {newHead, segments, id} = snake;
     if (
       segments
         .slice(1)
@@ -93,7 +94,7 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
             // Add 50 points to the other player
             updatedScores = prevState.scores.map((p) => {
               if (p.id === snakeB.id) {
-                return { ...p, score: p.score + 50 };
+                return {...p, score: p.score + 50};
               }
               return p;
             });
@@ -106,7 +107,7 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
 
   // Paso 4: Verificar colisiones con obstáculos
   snakesWithNewHead.forEach((snake) => {
-    const { newHead } = snake;
+    const {newHead} = snake;
     if (
       prevState.obstacles.some(
         (obstacle) => obstacle.x === newHead.x && obstacle.y === newHead.y
@@ -127,45 +128,56 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
       if (deadSnakeIds.has(snake.id)) {
         const consumed = snake.segments.length - 1;
         const dropCount = Math.floor(consumed / 2);
-        const drops: Food[] = snake.segments.slice(-dropCount).map((seg) => ({
-          coordinates: seg,
-          sprite: generateRandomFoodSprite(),
-        }));
+        const drops: Food[] = snake.segments
+          .slice(-dropCount)
+          .map((seg) => {
+            const sprite = generateRandomFoodSprite()
+            const multiplier = sprite === 'goldenApple' ? 0.5 : (sprite === 'mushroom' ? 1.5 : 1);
+            const modifier = generateFoodModifier(difficulty, multiplier)
+            return {
+              coordinates: seg,
+              sprite: sprite,
+              modifier: modifier,
+            }
+          });
         newFoodArray = [...newFoodArray, ...drops];
         return null; // La serpiente muere
       } else {
         let ateFood = false;
-        if (
-          newFoodArray.some(
-            ({ coordinates: f }) =>
-              f.x === snake.newHead.x && f.y === snake.newHead.y
-          )
-        ) {
+        const eatenFood = newFoodArray.find(
+          ({coordinates: f}) =>
+            f.x === snake.newHead.x && f.y === snake.newHead.y
+        );
+        let newSpeedFactor = snake.speedFactor; // Conservamos el valor actual por defecto
+        if (eatenFood) {
           ateFood = true;
-          // Add 1 point per food
+          // Agregar 1 punto por comida
           updatedScores = prevState.scores.map((p) => {
             if (p.id === snake.id) {
-              return { ...p, score: p.score + 1 };
+              return {...p, score: p.score + 1};
             }
             return p;
           });
           eatSound.play();
           newFoodArray = newFoodArray.filter(
-            ({ coordinates: f }) =>
+            ({coordinates: f}) =>
               !(f.x === snake.newHead.x && f.y === snake.newHead.y)
           );
-
+          // Generamos nueva comida
           newFoodArray = [
             ...newFoodArray,
             ...generateFood(
               1,
               snakesWithNewHead,
+              difficulty,
               newObstacles,
               newFoodArray,
               snake.newHead
             ),
           ];
           newConsumedFood += 1;
+          // Si la comida comida es "goldenApple", se actualiza el speedFactor
+          newSpeedFactor = eatenFood.modifier;
         }
         // Cada X comidas consumidas, generamos un obstáculo
         const parsedDifficulty = parseInt(difficulty);
@@ -184,10 +196,7 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
         let newSegments: { x: number; y: number; direction: Coordinate }[] = [];
         if (tickCount % snake.speedFactor === 0) {
           // Creamos el nuevo segmento de cabeza con la dirección actual.
-          const newHeadSegment = {
-            ...snake.newHead,
-            direction: snake.direction,
-          };
+          const newHeadSegment = {...snake.newHead, direction: snake.direction};
           newSegments.push(newHeadSegment);
           // Para cada segmento del cuerpo, desplazamos el arreglo: cada segmento adopta la posición del que estaba delante.
           // Si la snake come, conservamos todos los segmentos; si no, eliminamos el último.
@@ -197,7 +206,7 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
           // Si no se movió, se conserva el arreglo actual.
           newSegments = snake.segments;
         }
-        return { ...snake, segments: newSegments };
+        return {...snake, segments: newSegments, speedFactor: newSpeedFactor};
       }
     })
     .filter((snake) => snake !== null) as Snake[];
@@ -246,7 +255,7 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
   if (deadSnakeIds.size > 0) {
     updatedScores = prevState.scores.map((p) => {
       if (!deadSnakeIds.has(p.id) && updatedSnakes.some((s) => s.id === p.id)) {
-        return { ...p, score: p.score + 100 };
+        return {...p, score: p.score + 100};
       }
 
       return p;

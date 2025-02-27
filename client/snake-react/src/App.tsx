@@ -79,7 +79,6 @@ const App: React.FC = () => {
           }
 
           if (data.type === "playerList") {
-            console.log(data.disconnected);
             if (data.showToast) {
               if (data.disconnected) {
                 toast.warn(`${data.newPlayerName} has left the room!`);

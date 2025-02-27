@@ -4,6 +4,7 @@ export type Coordinate = { x: number; y: number };
 export interface Food {
   coordinates: Coordinate;
   sprite: string;
+  modifier: number;
 }
 
 export interface SnakeSegment {
