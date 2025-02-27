@@ -224,7 +224,7 @@ const GameView: React.FC<GameViewProps> = ({
 
   const [gameState, setGameState] = useState<GameState>({
     ...initialGameState,
-    food: generateFood(100, snakes, difficulty),
+    food: generateFood(20, snakes, difficulty),
     scores: players.map((p) => ({ id: p.id, name: p.name, score: 0 })),
     snakes: snakes,
   });
@@ -289,7 +289,7 @@ const GameView: React.FC<GameViewProps> = ({
       tickCounterRef.current += 1;
       const newTick = tickCounterRef.current;
       updateGame(newTick);
-    }, 10);
+    }, 20);
     return () => clearInterval(interval);
   }, [role, socket, gameState, players, isPaused]);
 
@@ -621,7 +621,7 @@ const GameView: React.FC<GameViewProps> = ({
                   name: p.name,
                   score: 0,
                 })),
-                food: generateFood(10, snakes, difficulty),
+                food: generateFood(20, snakes, difficulty),
                 snakes: players.map((player, index) => {
                   const direction: Coordinate =
                     index % 2 === 0 ? { x: 0, y: -1 } : { x: 0, y: 1 };

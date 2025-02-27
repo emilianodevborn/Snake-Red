@@ -62,9 +62,9 @@ export const AVAILABLE_COLORS = [
 ] as const;
 
 export const DIFFICULTY_LEVELS = {
-  "1": 12,
-  "2": 8,
-  "3": 5,
+  "1": 6,
+  "2": 4,
+  "3": 2.5,
 } as const;
 
 export const BOT_NAMES = [
