@@ -10,6 +10,7 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   disabled,
   onClick,
+  className,
   ...props
 }) => {
   const buttonEffect = useRef<HTMLAudioElement>(new Audio(keyPressSound));
@@ -18,7 +19,7 @@ export const Button: React.FC<ButtonProps> = ({
     buttonEffect.current.play().then(() => {
       onClick();
     });
-  }
+  };
   return (
     <button
       className={`p-4 rounded-3xl transition duration-200 border-none w-full font-bold shadow-lg cursor-pointer ${
@@ -29,7 +30,7 @@ export const Button: React.FC<ButtonProps> = ({
         disabled
           ? "bg-gray-400 cursor-not-allowed text-gray-700 hover:bg-gray-400 "
           : ""
-      }`}
+      } ${className}`}
       disabled={disabled}
       onClick={handleClick}
       {...props}

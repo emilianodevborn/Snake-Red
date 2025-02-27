@@ -196,6 +196,8 @@ const GameView: React.FC<GameViewProps> = ({
 
   const hasHumanPlayers =
     players.filter((p) => !p.isBot && p.id !== localPlayerId).length > 0;
+
+  const isSinglePlayer = players.filter((p) => !p.isBot).length === 1;
   const baseX = Math.floor(CANVAS_WIDTH / GRID_SIZE / (players.length + 1));
   const separationX = Math.floor(
     CANVAS_WIDTH / GRID_SIZE / (players.length + 1)
@@ -215,7 +217,8 @@ const GameView: React.FC<GameViewProps> = ({
       segments,
       direction,
       color: AVAILABLE_COLORS[player.colorIndex!],
-      speedFactor: DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS],
+      speedFactor:
+        DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS],
     };
   });
 
@@ -609,6 +612,7 @@ const GameView: React.FC<GameViewProps> = ({
       <AnimatePresence>
         {gameState.isGameOver && !hasHumanPlayers && (
           <GameOver
+            isSinglePlayer={isSinglePlayer}
             onTryAgain={() =>
               setGameState({
                 ...initialGameState,
@@ -635,7 +639,10 @@ const GameView: React.FC<GameViewProps> = ({
                     segments,
                     direction,
                     color: AVAILABLE_COLORS[player.colorIndex!],
-                    speedFactor: DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS],
+                    speedFactor:
+                      DIFFICULTY_LEVELS[
+                        difficulty as keyof typeof DIFFICULTY_LEVELS
+                      ],
                   };
                 }),
               })
