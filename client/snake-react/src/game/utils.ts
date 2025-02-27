@@ -1,8 +1,13 @@
 import {
+  BOT_NAMES,
+  CANVAS_CONTAINER_HEIGHT,
+  CANVAS_CONTAINER_WIDTH,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   GRID_SIZE,
-  type Coordinate, BOT_NAMES, Snake, Food, SnakeSegment,
+  Snake,
+  SnakeSegment,
+  type Coordinate,
 } from "./GameTypes";
 
 // src/game/utils.ts
@@ -25,8 +30,8 @@ export const getMessageText = (data: any): Promise<string> => {
 
 export function getConstrainedTransform(position: Coordinate) {
   // Calculate the maximum allowed translation
-  const maxTranslateX = CANVAS_WIDTH - 800; // container width
-  const maxTranslateY = CANVAS_HEIGHT - 600; // container height
+  const maxTranslateX = CANVAS_WIDTH - CANVAS_CONTAINER_WIDTH; // container width
+  const maxTranslateY = CANVAS_HEIGHT - CANVAS_CONTAINER_HEIGHT; // container height
 
   // Calculate desired translation
   const desiredX = -position.x * GRID_SIZE + 401;
@@ -40,36 +45,38 @@ export function getConstrainedTransform(position: Coordinate) {
 }
 
 export const assignBotName = (bots: any[], botDifficulty: string) => {
-  const usedNames = bots?.map(bot => bot.name.split(" ")[0]);
-  const unusedNames = BOT_NAMES.filter(name => !usedNames.includes(name));
+  const usedNames = bots?.map((bot) => bot.name.split(" ")[0]);
+  const unusedNames = BOT_NAMES.filter((name) => !usedNames.includes(name));
   if (unusedNames.length === 0) {
     return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
   }
   return `${unusedNames[0]} (${botDifficulty})`;
-}
+};
 
 export function isValidPosition(
   pos: Coordinate,
   snakes: Snake[],
   obstacles?: Coordinate[],
   foods?: Coordinate[],
-  head?: Coordinate,
+  head?: Coordinate
 ): boolean {
   const occupied = new Set<string>();
-  head && occupied.add(`${head.x},${head.y}`)
+  head && occupied.add(`${head.x},${head.y}`);
   // Agregar obstáculos
-  obstacles && obstacles.forEach(item => {
-    occupied.add(`${item.x},${item.y}`);
-  });
+  obstacles &&
+    obstacles.forEach((item) => {
+      occupied.add(`${item.x},${item.y}`);
+    });
 
   // Agregar comidas
-  foods && foods.forEach(item => {
-    occupied.add(`${item.x},${item.y}`);
-  });
+  foods &&
+    foods.forEach((item) => {
+      occupied.add(`${item.x},${item.y}`);
+    });
 
   // Agregar segmentos de todas las serpientes
-  snakes.forEach(snake => {
-    snake.segments.forEach(seg => {
+  snakes.forEach((snake) => {
+    snake.segments.forEach((seg) => {
       occupied.add(`${seg.x},${seg.y}`);
     });
   });
@@ -90,7 +97,7 @@ export function generateSnakeSegments(
     segments.push({
       x: head.x + i * opposite.x,
       y: head.y + i * opposite.y,
-      direction: { ...direction }
+      direction: { ...direction },
     });
   }
   return segments;

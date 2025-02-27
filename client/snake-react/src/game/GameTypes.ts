@@ -43,6 +43,8 @@ export type Player = {
 // Constantes del juego
 export const CANVAS_WIDTH = 2000;
 export const CANVAS_HEIGHT = 2000;
+export const CANVAS_CONTAINER_WIDTH = 800;
+export const CANVAS_CONTAINER_HEIGHT = 600;
 export const GRID_SIZE = 20;
 
 export const AVAILABLE_COLORS = [
@@ -64,5 +66,10 @@ export const DIFFICULTY_LEVELS = {
   "3": 5,
 } as const;
 
-export const BOT_NAMES = ['Bot-tanic', 'MultiLegs-Mike', 'Centi-Bot', 'Leggy-McBot', 'Bot-of-Many-Legs']
-
+export const BOT_NAMES = [
+  "Bot-tanic",
+  "MultiLegs-Mike",
+  "Centi-Bot",
+  "Leggy-McBot",
+  "Bot-of-Many-Legs",
+];
