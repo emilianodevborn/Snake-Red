@@ -1,14 +1,14 @@
 // src/StartScreen.tsx
 import { useState, type FC } from "react";
-import GameButtons from "./components/GameButtons";
-import GameInputs from "./components/GameInputs";
-import Separator from "./components/Separator";
-import Modal from "./components/Modal";
-import GameControls from "./components/GameControls";
-import { Button } from "./components/Button";
-import Input from "./components/Input";
-import Logo from "./assets/logo.svg";
-import Orange from "./assets/orange-with-hands.svg";
+import GameButtons from "../components/GameButtons";
+import GameInputs from "../components/GameInputs";
+import Separator from "../components/Separator";
+import Modal from "../components/Modal";
+import GameControls from "../components/GameControls";
+import { Button } from "../components/Button";
+import Input from "../components/Input";
+import Logo from "../assets/logo.svg";
+import Orange from "../assets/orange-with-hands.svg";
 
 interface StartScreenProps {
   onSelectClient: () => void;
