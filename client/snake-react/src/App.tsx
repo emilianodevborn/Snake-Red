@@ -179,7 +179,10 @@ const App: React.FC = () => {
           players={players}
           localPlayerId={clientId}
           onDifficultyChange={setDifficulty}
-          onBackClick={() => setPhase(GamePhase.START)}
+          onBackClick={() => {
+            setIsGoingBack(true);
+            setPhase(GamePhase.START);
+          }}
         />
       )}
       {/* <Modal
