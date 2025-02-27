@@ -127,12 +127,10 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
       if (deadSnakeIds.has(snake.id)) {
         const consumed = snake.segments.length - 1;
         const dropCount = Math.floor(consumed / 2);
-        const drops: Food[] = snake.segments
-          .slice(-dropCount)
-          .map((seg) => ({
-            coordinates: seg,
-            sprite: generateRandomFoodSprite(),
-          }));
+        const drops: Food[] = snake.segments.slice(-dropCount).map((seg) => ({
+          coordinates: seg,
+          sprite: generateRandomFoodSprite(),
+        }));
         newFoodArray = [...newFoodArray, ...drops];
         return null; // La serpiente muere
       } else {
@@ -159,7 +157,13 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
 
           newFoodArray = [
             ...newFoodArray,
-            ...generateFood(1, snakesWithNewHead, newObstacles, newFoodArray, snake.newHead),
+            ...generateFood(
+              1,
+              snakesWithNewHead,
+              newObstacles,
+              newFoodArray,
+              snake.newHead
+            ),
           ];
           newConsumedFood += 1;
         }
@@ -171,7 +175,7 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
             snake.segments.length,
             newObstacles,
             newFoodArray,
-            snakesWithNewHead,
+            snakesWithNewHead
           );
           newObstacles.push(obstacle);
         }
@@ -180,7 +184,10 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
         let newSegments: { x: number; y: number; direction: Coordinate }[] = [];
         if (tickCount % snake.speedFactor === 0) {
           // Creamos el nuevo segmento de cabeza con la dirección actual.
-          const newHeadSegment = { ...snake.newHead, direction: snake.direction };
+          const newHeadSegment = {
+            ...snake.newHead,
+            direction: snake.direction,
+          };
           newSegments.push(newHeadSegment);
           // Para cada segmento del cuerpo, desplazamos el arreglo: cada segmento adopta la posición del que estaba delante.
           // Si la snake come, conservamos todos los segmentos; si no, eliminamos el último.
@@ -194,7 +201,6 @@ export const updateGameState = (params: UpdateGameStateParams): GameState => {
       }
     })
     .filter((snake) => snake !== null) as Snake[];
-
 
   /**
    * Paso 6 - Game over logic:

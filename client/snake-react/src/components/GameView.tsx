@@ -1,36 +1,48 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import obstacle from "../assets/skul.svg";
-import faceDown from "../assets/face-down.svg";
-import faceUp from "../assets/face-up.svg";
-import faceLeft from "../assets/face-left.svg";
-import faceRight from "../assets/face-right.svg";
+import apple from "../assets/apple.svg";
 import bodyUp from "../assets/body-down.svg";
-import bodyDown from "../assets/body-up.svg";
 import bodyRight from "../assets/body-left.svg";
 import bodyLeft from "../assets/body-right.svg";
-import orange from "../assets/orange.svg";
-import lemon from "../assets/lemon.svg";
-import apple from "../assets/apple.svg";
+import bodyDown from "../assets/body-up.svg";
 import cherry from "../assets/cherry.svg";
+import faceDown from "../assets/face-down.svg";
+import faceLeft from "../assets/face-left.svg";
+import faceRight from "../assets/face-right.svg";
+import faceUp from "../assets/face-up.svg";
+import lemon from "../assets/lemon.svg";
 import mushroom from "../assets/mushroom.svg";
+import orange from "../assets/orange.svg";
+import obstacle from "../assets/skul.svg";
 import strawberry from "../assets/strawberry.svg";
 import watermelon from "../assets/watermelon.svg";
 
 import { updateGameState } from "../game/GameLogic";
 import {
   AVAILABLE_COLORS,
+  CANVAS_CONTAINER_HEIGHT,
+  CANVAS_CONTAINER_WIDTH,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   type Coordinate,
   DIFFICULTY_LEVELS,
   GameState,
   GRID_SIZE,
-  type Player, Snake,
+  type Player,
+  Snake,
 } from "../game/GameTypes";
 import { generateFood } from "../game/generateFood";
-import {generateSnakeSegments, getConstrainedTransform, getMessageText} from "../game/utils";
+import {
+  generateSnakeSegments,
+  getConstrainedTransform,
+  getMessageText,
+} from "../game/utils";
 
+import { AnimatePresence } from "framer-motion";
+import debounce from "lodash.debounce";
 import { computeBotState, getBotMove, mapActionToDirection } from "./bot";
+import GameControls from "./GameControls";
+import { GameOver } from "./GameOver";
+import Modal from "./Modal";
 import {
   boardStyles,
   canvasContainerStyles,
@@ -38,11 +50,69 @@ import {
   controlsStyles,
   wrapperStyles,
 } from "./styles";
-import { GameOver } from "./GameOver";
-import { AnimatePresence } from "framer-motion";
-import debounce from "lodash.debounce";
-import GameControls from "./GameControls";
-import Modal from "./Modal";
+
+const createColoredImage = (
+  svgUrl: string,
+  color: string
+): Promise<HTMLImageElement> => {
+  return fetch(svgUrl)
+    .then((response) => response.text())
+    .then((svgText) => {
+      // Remove # if present and add opacity for shadow effect
+      const shadowColor = color + "4D"; // 4D in hex = 30% opacity
+
+      // Replace both fill colors
+      const coloredSvg = svgText.replace(
+        /<(circle|path)[^>]*fill="[^"]*"[^>]*>/g,
+        (match) => {
+          if (match.includes("circle")) {
+            return match.replace(/fill="[^"]*"/, `fill="${color}"`);
+          } else if (match.includes("path")) {
+            return match.replace(/fill="[^"]*"/, `fill="${shadowColor}"`);
+          }
+          return match;
+        }
+      );
+
+      // Convert SVG to data URL
+      const blob = new Blob([coloredSvg], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+
+      // Create and return image
+      const img = new Image();
+      img.src = url;
+      return new Promise<HTMLImageElement>((resolve) => {
+        img.onload = () => {
+          resolve(img);
+          URL.revokeObjectURL(url);
+        };
+      });
+    });
+};
+
+// Create an image cache
+const imageCache: Record<string, Record<string, HTMLImageElement>> = {
+  bodyUp: {},
+  bodyDown: {},
+  bodyLeft: {},
+  bodyRight: {},
+  faceUp: {},
+  faceDown: {},
+  faceLeft: {},
+  faceRight: {},
+};
+
+// Function to get or create a colored image
+const getColoredImage = async (
+  type: keyof typeof imageCache,
+  color: string,
+  svgUrl: string
+): Promise<HTMLImageElement> => {
+  if (!imageCache[type][color]) {
+    imageCache[type][color] = await createColoredImage(svgUrl, color);
+  }
+  return imageCache[type][color];
+};
 
 interface GameViewProps {
   role: "host" | "client" | null;
@@ -120,13 +190,17 @@ const GameView: React.FC<GameViewProps> = ({
   const [showControls, setShowControls] = useState(false);
   const tickCounterRef = useRef(0);
 
-  const hasHumanPlayers = players.filter(p => !p.isBot && p.id !== localPlayerId).length > 0;
-  const baseX = Math.floor((CANVAS_WIDTH / GRID_SIZE) / (players.length + 1));
-  const separationX = Math.floor((CANVAS_WIDTH / GRID_SIZE) / (players.length + 1));
-  const headY = Math.floor((CANVAS_HEIGHT / GRID_SIZE) / 2);
+  const hasHumanPlayers =
+    players.filter((p) => !p.isBot && p.id !== localPlayerId).length > 0;
+  const baseX = Math.floor(CANVAS_WIDTH / GRID_SIZE / (players.length + 1));
+  const separationX = Math.floor(
+    CANVAS_WIDTH / GRID_SIZE / (players.length + 1)
+  );
+  const headY = Math.floor(CANVAS_HEIGHT / GRID_SIZE / 2);
   const snakeLength = 3;
   const snakes: Snake[] = players.map((player, index) => {
-    const direction: Coordinate = index % 2 === 0 ? { x: 0, y: -1 } : { x: 0, y: 1 };
+    const direction: Coordinate =
+      index % 2 === 0 ? { x: 0, y: -1 } : { x: 0, y: 1 };
     const head: Coordinate = {
       x: baseX + index * separationX,
       y: headY,
@@ -136,9 +210,7 @@ const GameView: React.FC<GameViewProps> = ({
       id: player.id,
       segments,
       direction,
-      color: !!player.colorIndex
-        ? AVAILABLE_COLORS[player.colorIndex]
-        : "green",
+      color: AVAILABLE_COLORS[player.colorIndex!],
       speedFactor: DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS],
     };
   });
@@ -265,9 +337,9 @@ const GameView: React.FC<GameViewProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       // Manejo de la pausa con la barra espaciadora
-      if (e.code === 'Space' && !hasHumanPlayers) {
+      if (e.code === "Space" && !hasHumanPlayers) {
         e.preventDefault(); // Prevenir scroll
-        setIsPaused(prev => !prev);
+        setIsPaused((prev) => !prev);
         return;
       }
 
@@ -372,121 +444,142 @@ const GameView: React.FC<GameViewProps> = ({
     if (!ctx) return;
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    gameState.snakes.forEach((snake) => {
+    gameState.snakes.forEach(async (snake) => {
+      const snakeColor = snake.color;
+
+      // Get or create colored images for this snake
+      const [
+        coloredFaceUp,
+        coloredFaceDown,
+        coloredFaceLeft,
+        coloredFaceRight,
+        coloredBodyUp,
+        coloredBodyDown,
+        coloredBodyLeft,
+        coloredBodyRight,
+      ] = await Promise.all([
+        getColoredImage("faceUp", snakeColor, faceUp),
+        getColoredImage("faceDown", snakeColor, faceDown),
+        getColoredImage("faceLeft", snakeColor, faceLeft),
+        getColoredImage("faceRight", snakeColor, faceRight),
+        getColoredImage("bodyUp", snakeColor, bodyUp),
+        getColoredImage("bodyDown", snakeColor, bodyDown),
+        getColoredImage("bodyLeft", snakeColor, bodyLeft),
+        getColoredImage("bodyRight", snakeColor, bodyRight),
+      ]);
+
       snake.segments.forEach((segment, index) => {
         let img: HTMLImageElement;
         if (index === 0) {
           if (segment.direction.x === -1) {
-            img = faceLeftImage
+            img = coloredFaceLeft;
             ctx.drawImage(
               img,
-              (segment.x * GRID_SIZE) - 0.4 * GRID_SIZE,
-              (segment.y * GRID_SIZE) - 0.25 * GRID_SIZE,
+              segment.x * GRID_SIZE - 0.4 * GRID_SIZE,
+              segment.y * GRID_SIZE - 0.25 * GRID_SIZE,
               GRID_SIZE * 1.5,
               GRID_SIZE * 1.5
             );
           } else if (segment.direction.x === 1) {
-            img = faceRightImage
+            img = coloredFaceRight;
             ctx.drawImage(
               img,
-              (segment.x * GRID_SIZE) - 0.1 * GRID_SIZE,
-              (segment.y * GRID_SIZE) - 0.25 * GRID_SIZE,
+              segment.x * GRID_SIZE - 0.1 * GRID_SIZE,
+              segment.y * GRID_SIZE - 0.25 * GRID_SIZE,
               GRID_SIZE * 1.5,
               GRID_SIZE * 1.5
             );
           } else if (segment.direction.y === -1) {
-            img = faceUpImage
+            img = coloredFaceUp;
             ctx.drawImage(
               img,
-              (segment.x * GRID_SIZE) - 0.3 * GRID_SIZE,
-              (segment.y * GRID_SIZE) - 0.4 * GRID_SIZE,
+              segment.x * GRID_SIZE - 0.3 * GRID_SIZE,
+              segment.y * GRID_SIZE - 0.4 * GRID_SIZE,
               GRID_SIZE * 1.5,
               GRID_SIZE * 1.5
             );
           } else {
-            img = faceDownImage
+            img = coloredFaceDown;
             ctx.drawImage(
               img,
-              (segment.x * GRID_SIZE) - 0.2 * GRID_SIZE,
-              (segment.y * GRID_SIZE) - 0.15 * GRID_SIZE,
+              segment.x * GRID_SIZE - 0.2 * GRID_SIZE,
+              segment.y * GRID_SIZE - 0.15 * GRID_SIZE,
               GRID_SIZE * 1.5,
               GRID_SIZE * 1.5
             );
           }
         } else {
           if (segment.direction.x === -1) {
-            img = bodyLeftImage
+            img = coloredBodyLeft;
             ctx.drawImage(
               img,
-              (segment.x * GRID_SIZE) - 0.25 * GRID_SIZE,
-              (segment.y * GRID_SIZE) - GRID_SIZE,
+              segment.x * GRID_SIZE - 0.25 * GRID_SIZE,
+              segment.y * GRID_SIZE - GRID_SIZE,
               GRID_SIZE * 1.5,
               GRID_SIZE * 3
             );
           } else if (segment.direction.x === 1) {
-            img = bodyRightImage
+            img = coloredBodyRight;
             ctx.drawImage(
               img,
-              (segment.x * GRID_SIZE) - 0.25 * GRID_SIZE,
-              (segment.y * GRID_SIZE) - GRID_SIZE,
+              segment.x * GRID_SIZE - 0.25 * GRID_SIZE,
+              segment.y * GRID_SIZE - GRID_SIZE,
               GRID_SIZE * 1.5,
               GRID_SIZE * 3
             );
           } else if (segment.direction.y === -1) {
-            img = bodyUpImage
+            img = coloredBodyUp;
             ctx.drawImage(
               img,
-              (segment.x * GRID_SIZE) - GRID_SIZE,
-              (segment.y * GRID_SIZE) - 0.25 * GRID_SIZE,
+              segment.x * GRID_SIZE - GRID_SIZE,
+              segment.y * GRID_SIZE - 0.25 * GRID_SIZE,
               GRID_SIZE * 3,
               GRID_SIZE * 1.5
             );
           } else {
-            img = bodyDownImage
+            img = coloredBodyDown;
             ctx.drawImage(
               img,
-              (segment.x * GRID_SIZE) - GRID_SIZE,
-              (segment.y * GRID_SIZE) - 0.25 * GRID_SIZE,
+              segment.x * GRID_SIZE - GRID_SIZE,
+              segment.y * GRID_SIZE - 0.25 * GRID_SIZE,
               GRID_SIZE * 3,
               GRID_SIZE * 1.5
             );
           }
         }
-
       });
     });
 
     // Show food
     gameState.food.forEach(({ coordinates, sprite }) => {
       let img: HTMLImageElement;
-      switch(sprite) {
-        case 'lemon':
-          img = lemonFood
+      switch (sprite) {
+        case "lemon":
+          img = lemonFood;
           break;
-        case 'orange':
-          img = orangeFood
+        case "orange":
+          img = orangeFood;
           break;
-        case 'apple':
-          img = appleFood
+        case "apple":
+          img = appleFood;
           break;
-        case 'cherry':
-          img = cherryFood
+        case "cherry":
+          img = cherryFood;
           break;
-        case 'mushroom':
-          img = mushroomFood
+        case "mushroom":
+          img = mushroomFood;
           break;
-        case 'strawberry':
-          img = strawberryFood
+        case "strawberry":
+          img = strawberryFood;
           break;
         default:
-          img = watermelonFood
+          img = watermelonFood;
           break;
-
       }
       ctx.drawImage(
         img,
-        (coordinates.x * GRID_SIZE) - (0.25 * GRID_SIZE),
-        (coordinates.y * GRID_SIZE) - (0.25 * GRID_SIZE),
+        coordinates.x * GRID_SIZE - 0.25 * GRID_SIZE,
+        coordinates.y * GRID_SIZE - 0.25 * GRID_SIZE,
         GRID_SIZE * 1.5,
         GRID_SIZE * 1.5
       );
@@ -496,8 +589,8 @@ const GameView: React.FC<GameViewProps> = ({
     gameState.obstacles.forEach((obstacle) => {
       ctx.drawImage(
         obstable,
-        (obstacle.x * GRID_SIZE) - (0.25 * GRID_SIZE),
-        (obstacle.y * GRID_SIZE) - (0.25 * GRID_SIZE),
+        obstacle.x * GRID_SIZE - 0.25 * GRID_SIZE,
+        obstacle.y * GRID_SIZE - 0.25 * GRID_SIZE,
         GRID_SIZE * 1.5,
         GRID_SIZE * 1.5
       );
@@ -507,7 +600,7 @@ const GameView: React.FC<GameViewProps> = ({
   return (
     <div style={wrapperStyles}>
       <AnimatePresence>
-        {gameState.isGameOver && !gameState.isMultiplayer && (
+        {gameState.isGameOver && !hasHumanPlayers && (
           <GameOver
             onTryAgain={() =>
               setGameState({
@@ -519,19 +612,22 @@ const GameView: React.FC<GameViewProps> = ({
                 })),
                 food: generateFood(10, snakes),
                 snakes: players.map((player, index) => {
-                  const direction: Coordinate = index % 2 === 0 ? { x: 0, y: -1 } : { x: 0, y: 1 };
+                  const direction: Coordinate =
+                    index % 2 === 0 ? { x: 0, y: -1 } : { x: 0, y: 1 };
                   const head: Coordinate = {
                     x: baseX + index * separationX,
                     y: headY,
                   };
-                  const segments = generateSnakeSegments(head, snakeLength, direction);
+                  const segments = generateSnakeSegments(
+                    head,
+                    snakeLength,
+                    direction
+                  );
                   return {
                     id: player.id,
                     segments,
                     direction,
-                    color: !!player.colorIndex
-                      ? AVAILABLE_COLORS[player.colorIndex]
-                      : "green",
+                    color: AVAILABLE_COLORS[player.colorIndex!],
                     speedFactor: DIFFICULTY_LEVELS[difficulty as keyof typeof DIFFICULTY_LEVELS],
                   };
                 }),
@@ -542,7 +638,10 @@ const GameView: React.FC<GameViewProps> = ({
       </AnimatePresence>
       <div style={boardStyles}>
         <div className="flex flex-col justify-between">
-          <div className="flex justify-between items-center" style={controlsStyles}>
+          <div
+            className="flex justify-between items-center"
+            style={controlsStyles}
+          >
             <div>
               {gameState.scores
                 .sort((a, b) => b.score - a.score)
@@ -565,7 +664,13 @@ const GameView: React.FC<GameViewProps> = ({
             </button>
           </div>
         </div>
-        <div style={canvasContainerStyles}>
+        <div
+          style={{
+            ...canvasContainerStyles,
+            width: CANVAS_CONTAINER_WIDTH,
+            height: CANVAS_CONTAINER_HEIGHT,
+          }}
+        >
           <canvas
             ref={canvasRef}
             width={CANVAS_WIDTH}
@@ -580,28 +685,33 @@ const GameView: React.FC<GameViewProps> = ({
             }}
           />
           {isPaused && !hasHumanPlayers && (
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              color: 'white',
-              padding: '20px',
-              borderRadius: '10px',
-              zIndex: 1000,
-              fontSize: '24px',
-              fontWeight: 'bold'
-            }}>
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                backgroundColor: "rgba(0, 0, 0, 0.8)",
+                color: "white",
+                padding: "20px",
+                borderRadius: "10px",
+                zIndex: 1000,
+                fontSize: "24px",
+                fontWeight: "bold",
+              }}
+            >
               PAUSED
             </div>
           )}
         </div>
       </div>
-      <Modal isOpen={showControls} onClose={() => {
-        setShowControls(false);
-        setIsPaused(false);
-      }}>
+      <Modal
+        isOpen={showControls}
+        onClose={() => {
+          setShowControls(false);
+          setIsPaused(false);
+        }}
+      >
         <GameControls />
       </Modal>
     </div>
