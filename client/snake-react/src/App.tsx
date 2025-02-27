@@ -1,8 +1,8 @@
 // src/App.tsx
 import { useEffect, useRef, useState } from "react";
-import StartScreen from "./StartScreen";
-import WaitingRoom from "./WaitingRoom";
-import LoadingView from "./LoadingView";
+import StartScreen from "./pages/StartScreen";
+import WaitingRoom from "./pages/WaitingRoom";
+import LoadingView from "./pages/LoadingView";
 import GameView from "./components/GameView";
 import Modal from "./components/Modal";
 import useCreateRoom from "./hooks/useCreateRoom";
@@ -41,7 +41,8 @@ const App: React.FC = () => {
       setIsAudioPlaying(false);
     } else {
       audio.current.loop = true;
-      audio.current.play()
+      audio.current
+        .play()
         .then(() => {
           setIsAudioPlaying(true);
         })
@@ -107,12 +108,13 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isGoingBack) {
       setIsGoingBack(false);
-      return
-    };
+      return;
+    }
     if (phase === GamePhase.START) {
       audio.current.pause();
       audio.current = new Audio(backgroundMusic);
-      audio.current.play()
+      audio.current
+        .play()
         .then(() => {
           setIsAudioPlaying(true);
         })
@@ -124,7 +126,8 @@ const App: React.FC = () => {
       toast.dismiss();
       audio.current.pause();
       audio.current = new Audio(gameMusic);
-      audio.current.play()
+      audio.current
+        .play()
         .then(() => {
           setIsAudioPlaying(true);
         })
@@ -168,24 +171,24 @@ const App: React.FC = () => {
         />
       )}
 
-      <Modal
+      {phase === GamePhase.LOBBY && role && socket && (
+        <WaitingRoom
+          onStartGame={() => setPhase(GamePhase.LOADING)}
+          isHost={role === "host"}
+          socket={socket}
+          players={players}
+          localPlayerId={clientId}
+          onDifficultyChange={setDifficulty}
+          onBackClick={() => {
+            setIsGoingBack(true);
+            setPhase(GamePhase.START);
+          }}
+        />
+      )}
+      {/* <Modal
         isOpen={phase === GamePhase.LOBBY}
-        onClose={() => {
-          setIsGoingBack(true);
-          setPhase(GamePhase.START);
-        }}
-      >
-        {role && socket && (
-          <WaitingRoom
-            onStartGame={() => setPhase(GamePhase.LOADING)}
-            isHost={role === "host"}
-            socket={socket}
-            players={players}
-            localPlayerId={clientId}
-            onDifficultyChange={setDifficulty}
-          />
-        )}
-      </Modal>
+        onClose={() => setPhase(GamePhase.START)}
+      ></Modal> */}
 
       <Modal
         isOpen={phase === GamePhase.LOADING}
