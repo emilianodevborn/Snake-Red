@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 265.5 272.5">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #231f20;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        fill: #d8d8c5;
+        filter: url(#drop-shadow-1);
+      }
+
+      .cls-4 {
+        fill: #44ad4d;
+      }
+    </style>
+    <filter id="drop-shadow-1" x="-12.2" y="-12.8" width="287.5" height="287.5" filterUnits="userSpaceOnUse">
+      <feOffset dx="2.8" dy="-11.3"/>
+      <feGaussianBlur result="blur" stdDeviation="5"/>
+      <feFlood flood-color="#7d7d74" flood-opacity=".4"/>
+      <feComposite in2="blur" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <!-- Generator: Adobe Illustrator 28.7.3, SVG Export Plug-In . SVG Version: 1.2.0 Build 164)  -->
+  <g>
+    <g id="Capa_1">
+      <circle class="cls-3" cx="128.7" cy="142.3" r="128.7"/>
+      <g>
+        <circle class="cls-1" cx="65.2" cy="127.5" r="54.8"/>
+        <circle class="cls-2" cx="65.2" cy="127.5" r="47.9"/>
+        <circle class="cls-4" cx="38.9" cy="113.9" r="17.8"/>
+        <circle class="cls-1" cx="38.9" cy="113.9" r="11.6"/>
+        <circle class="cls-2" cx="31.7" cy="125" r="10.7"/>
+        <circle class="cls-1" cx="192.2" cy="127.5" r="54.8" transform="translate(35.6 296.8) rotate(-80.8)"/>
+        <circle class="cls-2" cx="192.2" cy="127.5" r="47.9" transform="translate(35.6 296.8) rotate(-80.8)"/>
+        <circle class="cls-4" cx="167.3" cy="117.3" r="17.8" transform="translate(24.7 263.7) rotate(-80.8)"/>
+        <circle class="cls-1" cx="167.3" cy="117.3" r="11.6"/>
+        <circle class="cls-2" cx="160.2" cy="128.5" r="10.7" transform="translate(7.7 266) rotate(-80.8)"/>
+        <ellipse class="cls-1" cx="126" cy="50.2" rx="18.3" ry="7.9"/>
+      </g>
+    </g>
+  </g>
+</svg>

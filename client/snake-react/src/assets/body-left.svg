@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 207.9 508">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #e52a87;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #000;
+        stroke-miterlimit: 10;
+        stroke-width: 6px;
+      }
+
+      .cls-3 {
+        fill: #c30f7f;
+      }
+    </style>
+  </defs>
+  <!-- Generator: Adobe Illustrator 28.7.3, SVG Export Plug-In . SVG Version: 1.2.0 Build 164)  -->
+  <g>
+    <g id="Capa_1">
+      <g id="Capa_1-2" data-name="Capa_1">
+        <line class="cls-2" x1="103.3" y1="339.2" x2="69" y2="507.4"/>
+        <line class="cls-2" x1="103.3" y1="168.9" x2="69" y2=".6"/>
+        <circle class="cls-1" cx="103.9" cy="269" r="103.9"/>
+        <path class="cls-3" d="M121.2,372c49.2-8.3,86.6-51,86.6-102.5,0-53.8-40.9-98.1-93.4-103.4,26,24,42.8,62.7,42.8,106.4,0,39.7-14,75.4-36,99.5Z"/>
+      </g>
+    </g>
+  </g>
+</svg>
