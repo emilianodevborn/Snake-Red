@@ -12,6 +12,7 @@ import { getMessageText } from "./game/utils";
 import backgroundMusic from "./assets/background-sound.mp3";
 import gameMusic from "./assets/game-sound.mp3";
 import { toast, ToastContainer } from "react-toastify";
+import { Button } from "./components/Button";
 
 export enum GamePhase {
   START = "start",
@@ -143,12 +144,9 @@ const App: React.FC = () => {
       style={{ backgroundImage: "url('/grass.svg')" }}
     >
       <div className="absolute right-2 top-2 flex flex-col gap-2">
-        <button
-          className="bg-white px-4 py-2 rounded-lg border border-black hover:bg-gray-100 transition-all duration-200"
-          onClick={toggleBackgroundSound}
-        >
+        <Button onClick={toggleBackgroundSound} className="py-1 px-2">
           {isAudioPlaying ? "🔇 Turn Off Sound" : "🔊 Play Sound"}
-        </button>
+        </Button>
       </div>
 
       {phase === GamePhase.START && (
