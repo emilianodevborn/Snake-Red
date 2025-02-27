@@ -55,7 +55,7 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8080");
+    const ws = new WebSocket("https://9f53-190-210-239-237.ngrok-free.app");
     setSocket(ws);
     ws.onopen = (a) => {
       console.log("Conectado al servidor de señalización (App.tsx)", a);
