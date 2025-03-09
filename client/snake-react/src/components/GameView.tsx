@@ -16,19 +16,18 @@ import mushroom from "../assets/mushroom.svg";
 import strawberry from "../assets/strawberry.svg";
 import watermelon from "../assets/watermelon.svg";
 import goldenApple from "../assets/golden-apple.png";
+import trophyIcon from "../assets/trophy.svg";
 
 import { updateGameState } from "../game/GameLogic";
 import {
   AVAILABLE_COLORS,
-  CANVAS_CONTAINER_HEIGHT,
-  CANVAS_CONTAINER_WIDTH,
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   type Coordinate,
   DIFFICULTY_LEVELS,
   GameState,
   GRID_SIZE,
-  type Player,
+  type Player, SHADOW_COLORS,
   Snake,
 } from "../game/GameTypes";
 import { generateFood } from "../game/generateFood";
@@ -43,14 +42,26 @@ import debounce from "lodash.debounce";
 import { computeBotState, getBotMove, mapActionToDirection } from "./bot";
 import GameControls from "./GameControls";
 import { GameOver } from "./GameOver";
-import Modal from "./Modal";
 import {
-  boardStyles,
-  canvasContainerStyles,
   canvasStyles,
-  controlsStyles,
-  wrapperStyles,
+  centerColumnStyles,
+  columnsContainerStyles,
+  containerStyles,
+  headerStyles,
+  leftColumnStyles,
+  rankingHeaderIconStyles,
+  rankingHeaderStyles,
+  rankingHeaderTextStyles,
+  rankingItemFirstPlaceStyles,
+  rankingItemLocalStyles,
+  rankingItemStyles,
+  rankingListStyles,
+  rankingNameStyles,
+  rankingPositionStyles,
+  rankingScoreStyles,
+  rightColumnStyles,
 } from "./styles";
+import Logo from "../assets/logo.svg";
 
 const createColoredImage = (
   svgUrl: string,
@@ -59,16 +70,18 @@ const createColoredImage = (
   return fetch(svgUrl)
     .then((response) => response.text())
     .then((svgText) => {
+      const colorIndex = AVAILABLE_COLORS.findIndex((c) => c.toLowerCase() === color.toLowerCase());
       // Remove # if present and add opacity for shadow effect
-      const shadowColor = color + "4D"; // 4D in hex = 30% opacity
-
+      const shadowColor = colorIndex !== -1 ? SHADOW_COLORS[colorIndex] : "#000000";
       // Replace both fill colors
       const coloredSvg = svgText.replace(
         /<(circle|path)[^>]*fill="[^"]*"[^>]*>/g,
         (match) => {
           if (match.includes("circle")) {
+            // el círculo principal usa el color pleno
             return match.replace(/fill="[^"]*"/, `fill="${color}"`);
           } else if (match.includes("path")) {
+            // el path (sombra) usa shadowColor con opacidad
             return match.replace(/fill="[^"]*"/, `fill="${shadowColor}"`);
           }
           return match;
@@ -114,6 +127,16 @@ const getColoredImage = async (
   }
   return imageCache[type][color];
 };
+
+function applyAlphaHex(color: string, alpha: number): string {
+  if (!color.startsWith("#") || color.length !== 7) {
+    console.warn(`Color inválido: ${color}. Se esperaba formato #RRGGBB.`);
+    return color; // fallback
+  }
+  const a = Math.round(alpha * 255);
+  const alphaHex = a.toString(16).toUpperCase().padStart(2, "0");
+  return `${color}${alphaHex}`;
+}
 
 interface GameViewProps {
   role: "host" | "client" | null;
@@ -391,8 +414,7 @@ const GameView: React.FC<GameViewProps> = ({
         return { ...prevState, snakes: updatedSnakes };
       });
     };
-
-    const debouncedHandleKeyDown = debounce(handleKeyDown, 50);
+    const debouncedHandleKeyDown = debounce(handleKeyDown, 10);
 
     window.addEventListener("keydown", debouncedHandleKeyDown);
     return () => window.removeEventListener("keydown", debouncedHandleKeyDown);
@@ -437,7 +459,7 @@ const GameView: React.FC<GameViewProps> = ({
       }
     };
 
-    const debouncedHandleKeyDown = debounce(handleKeyDown, 50);
+    const debouncedHandleKeyDown = debounce(handleKeyDown, 1);
 
     window.addEventListener("keydown", debouncedHandleKeyDown);
     return () => window.removeEventListener("keydown", debouncedHandleKeyDown);
@@ -608,81 +630,53 @@ const GameView: React.FC<GameViewProps> = ({
   }, [gameState]);
 
   return (
-    <div style={wrapperStyles}>
-      <AnimatePresence>
-        {gameState.isGameOver && (
-          <GameOver
-            isSinglePlayer={isSinglePlayer}
-            onTryAgain={() =>
-              setGameState({
-                ...initialGameState,
-                scores: players.map((p) => ({
-                  id: p.id,
-                  name: p.name,
-                  score: 0,
-                })),
-                food: generateFood(20, snakes, difficulty),
-                snakes: players.map((player, index) => {
-                  const direction: Coordinate =
-                    index % 2 === 0 ? { x: 0, y: -1 } : { x: 0, y: 1 };
-                  const head: Coordinate = {
-                    x: baseX + index * separationX,
-                    y: headY,
-                  };
-                  const segments = generateSnakeSegments(
-                    head,
-                    snakeLength,
-                    direction
-                  );
-                  return {
-                    id: player.id,
-                    segments,
-                    direction,
-                    color: AVAILABLE_COLORS[player.colorIndex!],
-                    speedFactor:
-                      DIFFICULTY_LEVELS[
-                        difficulty as keyof typeof DIFFICULTY_LEVELS
-                      ],
-                  };
-                }),
-              })
-            }
-          />
-        )}
-      </AnimatePresence>
-      <div style={boardStyles}>
-        <div className="flex flex-col justify-between">
-          <div
-            className="flex justify-between items-center"
-            style={controlsStyles}
-          >
-            <div>
-              {gameState.scores
-                .sort((a, b) => b.score - a.score)
-                .map((score) => (
-                  <b key={score.id}>
-                    {score.name} - {score.score}
-                  </b>
-                ))}
-            </div>
-            <button
-              onClick={() => {
-                if (!hasHumanPlayers) {
-                  setIsPaused(true);
+    <div style={containerStyles}>
+      <div style={headerStyles}>
+        <div>
+          <img src={Logo} alt="Logo Centibite"/>
+        </div>
+      </div>
+      <div style={columnsContainerStyles}>
+        <div style={leftColumnStyles}>
+          <div style={rankingHeaderStyles}>
+            <img src={trophyIcon} alt="Trophy" style={rankingHeaderIconStyles}/>
+            <span style={rankingHeaderTextStyles}>RANKING</span>
+          </div>
+          <div style={rankingListStyles}>
+            {gameState.scores
+              .sort((a, b) => b.score - a.score)
+              .map((score, index) => {
+                // Chequeamos si es el primer lugar
+                const isFirstPlace = index === 0;
+                // Chequeamos si es el jugador local
+                const isLocalPlayer = score.id === localPlayerId;
+
+                // Clonamos el estilo base
+                let itemStyle: React.CSSProperties = {...rankingItemStyles};
+
+                // Si es el primer lugar, unimos con rankingItemFirstPlaceStyles
+                if (isFirstPlace) {
+                  itemStyle = {...itemStyle, ...rankingItemFirstPlaceStyles};
                 }
-                setShowControls(true);
-              }}
-              className="bg-white px-4 py-2 rounded-lg border border-black hover:bg-gray-100 transition-all duration-200"
-            >
-              🎮 Controls
-            </button>
+
+                // Si es el jugador local, unimos con rankingItemLocalStyles
+                if (isLocalPlayer) {
+                  itemStyle = {...itemStyle, ...rankingItemLocalStyles};
+                }
+
+                return (
+                  <div key={score.id} style={itemStyle}>
+                    <div style={rankingPositionStyles}>{index + 1}</div>
+                    <div style={rankingNameStyles}>{score.name}</div>
+                    <div style={rankingScoreStyles}>{score.score}</div>
+                  </div>
+                );
+              })}
           </div>
         </div>
         <div
           style={{
-            ...canvasContainerStyles,
-            width: CANVAS_CONTAINER_WIDTH,
-            height: CANVAS_CONTAINER_HEIGHT,
+            ...centerColumnStyles,
           }}
         >
           <canvas
@@ -718,16 +712,10 @@ const GameView: React.FC<GameViewProps> = ({
             </div>
           )}
         </div>
+        <div style={rightColumnStyles}>
+          <GameControls/>
+        </div>
       </div>
-      <Modal
-        isOpen={showControls}
-        onClose={() => {
-          setShowControls(false);
-          setIsPaused(false);
-        }}
-      >
-        <GameControls />
-      </Modal>
     </div>
   );
 };

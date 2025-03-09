@@ -49,16 +49,29 @@ export const CANVAS_CONTAINER_HEIGHT = 600;
 export const GRID_SIZE = 20;
 
 export const AVAILABLE_COLORS = [
-  "LightPink",
-  "PaleGreen",
-  "SandyBrown",
-  "Tomato",
-  "black",
-  "MediumSlateBlue",
-  "White",
-  "DeepPink",
-  "Khaki",
-  "SteelBlue",
+  "#FFB6C1", // LightPink
+  "#98FB98", // PaleGreen
+  "#F4A460", // SandyBrown
+  "#FF6347", // Tomato
+  "#000000", // Black
+  "#7B68EE", // MediumSlateBlue
+  "#FFFFFF", // White
+  "#FF1493", // DeepPink
+  "#F0E68C", // Khaki
+  "#4682B4", // SteelBlue
+] as const;
+
+export const SHADOW_COLORS = [
+  "#F48FA6", // Sombra para LightPink
+  "#90EE90", // Sombra para PaleGreen
+  "#E2A76F", // Sombra para SandyBrown
+  "#FF7F50", // Sombra para Tomato
+  "#444444", // Sombra para Black
+  "#6A5ACD", // Sombra para MediumSlateBlue
+  "#E0E0E0", // Sombra para White
+  "#FF69B4", // Sombra para DeepPink
+  "#D2B48C", // Sombra para Khaki
+  "#5F9EA0", // Sombra para SteelBlue
 ] as const;
 
 export const DIFFICULTY_LEVELS = {

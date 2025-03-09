@@ -31,12 +31,12 @@ export function getConstrainedTransform(position: Coordinate) {
   const maxTranslateY = CANVAS_HEIGHT - CANVAS_CONTAINER_HEIGHT; // container height
 
   // Calculate desired translation
-  const desiredX = -position.x * GRID_SIZE + 401;
-  const desiredY = -position.y * GRID_SIZE + 301;
+  const desiredX = -position.x * GRID_SIZE + 800 + 200;
+  const desiredY = -position.y * GRID_SIZE + 600 + 400;
 
   // Constrain the translation values
-  const constrainedX = Math.min(0, Math.max(-maxTranslateX, desiredX));
-  const constrainedY = Math.min(0, Math.max(-maxTranslateY, desiredY));
+  const constrainedX = Math.min(600, Math.max(-maxTranslateX + 600, desiredX));
+  const constrainedY = Math.min(700, Math.max(-maxTranslateY + 700, desiredY));
 
   return { x: constrainedX, y: constrainedY };
 }

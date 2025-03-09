@@ -162,7 +162,6 @@ export function isObstacle(
     nextPoint.y < 0 ||
     nextPoint.y >= CANVAS_HEIGHT / GRID_SIZE - 1
   ) {
-    console.log("LIMITE ", relDir);
     return true;
   }
 
@@ -172,7 +171,6 @@ export function isObstacle(
       (obst) => obst.x === nextPoint.x && obst.y === nextPoint.y
     )
   ) {
-    console.log("OBSTACULO");
 
     return true;
   }
@@ -181,7 +179,6 @@ export function isObstacle(
   for (const snake of gameState.snakes) {
     for (const seg of snake.segments) {
       if (seg.x === nextPoint.x && seg.y === nextPoint.y) {
-        console.log("Serpiente");
         return true;
       }
     }
